@@ -1,0 +1,26 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "(gdb) 启动",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${fileDirname}\\\\${fileBasenameNoExtension}.exe", // 要调试的程序，需与tasks.json输出一致
+            "args": [], // 传递给命令行参数
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false, // true为使用外部控制台窗口，false为使用VSCode集成终端
+            "MIMode": "gdb",
+            "miDebuggerPath": "D:\\A-StudySoft\\mingw64\\bin\\gdb.exe",
+            "setupCommands": [
+                {
+                    "description": "为 gdb 启用整齐打印",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "C/C++: gcc.exe 生成活动文件" // 必须与tasks.json中的label完全一致
+        }
+    ]
+}

@@ -1,0 +1,235 @@
+<html>
+<body>
+<pre>
+<h1>µVision Build Log</h1>
+<h2>Tool Versions:</h2>
+IDE-Version: ¦ÌVision V5.34.0.0
+Copyright (C) 2021 ARM Ltd and ARM Germany GmbH. All rights reserved.
+License Information: 1 CJ, 1, LIC=BUURY-I7YIW-Y8FFK-ZSI6F-7RG7P-4FXZY
+ 
+Tool Versions:
+Toolchain:       MDK-ARM Plus  Version: 5.34.0.0
+Toolchain Path:  D:\A-StudySoft\Keil\Keil5.34\ARM\ARMCC\Bin
+C Compiler:      Armcc.exe V5.06 update 7 (build 960)
+Assembler:       Armasm.exe V5.06 update 7 (build 960)
+Linker/Locator:  ArmLink.exe V5.06 update 7 (build 960)
+Library Manager: ArmAr.exe V5.06 update 7 (build 960)
+Hex Converter:   FromElf.exe V5.06 update 7 (build 960)
+CPU DLL:         SARMCM3.DLL V5.34.0.0
+Dialog DLL:      DCM.DLL V1.17.3.0
+Target DLL:      CMSIS_AGDI.dll V1.32.13.0
+Dialog DLL:      TCM.DLL V1.48.0.0
+ 
+<h2>Project:</h2>
+E:\CodeProj\MCU\2024_R2_Keil\MDK-ARM\2024_R2_Keil.uvprojx
+Project File Date:  11/12/2025
+
+<h2>Output:</h2>
+*** Using Compiler 'V5.06 update 7 (build 960)', folder: 'D:\A-StudySoft\Keil\Keil5.34\ARM\ARMCC\Bin'
+Build target '2024_R2_Keil'
+assembling startup_stm32f407xx.s...
+compiling stm32f4xx_it.c...
+..\User\Common\PID\pid.h(61): warning:  #1295-D: Deprecated declaration PID_init_outer - give arg types
+  void PID_init_outer();
+..\User\Motor\DJI_Motor\motor_def.h(13): error:  #67: expected a "}"
+      OPEN_LOOP = 0b0000,
+..\User\Motor\DJI_Motor\motor_def.h(22): warning:  #12-D: parsing restarts here after previous syntax error
+  } CloseLoopType_e;
+..\User\Motor\DJI_Motor\motor_def.h(63): error:  #20: identifier "MotorType_e" is undefined
+      MotorType_e motor_type;
+..\User\Motor\DJI_Motor\dji_motor.h(75): warning:  #1295-D: Deprecated declaration dji_motor_control - give arg types
+  void dji_motor_control();
+..\User\Tasks\chassis_task.h(149): warning:  #1295-D: Deprecated declaration PID_init_outer - give arg types
+  void PID_init_outer();
+../Core/Src/stm32f4xx_it.c(35): error:  #5: cannot open source input file "grapping.h": No such file or directory
+  #include "grapping.h"
+../Core/Src/stm32f4xx_it.c: 4 warnings, 3 errors
+compiling freertos.c...
+..\User\Common\PID\pid.h(61): warning:  #1295-D: Deprecated declaration PID_init_outer - give arg types
+  void PID_init_outer();
+..\User\Motor\DJI_Motor\motor_def.h(13): error:  #67: expected a "}"
+      OPEN_LOOP = 0b0000,
+..\User\Motor\DJI_Motor\motor_def.h(22): warning:  #12-D: parsing restarts here after previous syntax error
+  } CloseLoopType_e;
+..\User\Motor\DJI_Motor\motor_def.h(63): error:  #20: identifier "MotorType_e" is undefined
+      MotorType_e motor_type;
+..\User\Motor\DJI_Motor\dji_motor.h(75): warning:  #1295-D: Deprecated declaration dji_motor_control - give arg types
+  void dji_motor_control();
+..\User\Tasks\chassis_task.h(149): warning:  #1295-D: Deprecated declaration PID_init_outer - give arg types
+  void PID_init_outer();
+../Core/Src/freertos.c(184): warning:  #223-D: function "chassis_arrive_check" declared implicitly
+      chassis_arrive_check();
+../Core/Src/freertos.c(224): warning:  #223-D: function "grap_task" declared implicitly
+      grap_task();
+../Core/Src/freertos.c: 6 warnings, 2 errors
+compiling main.c...
+..\User\Common\PID\pid.h(61): warning:  #1295-D: Deprecated declaration PID_init_outer - give arg types
+  void PID_init_outer();
+..\User\Motor\DJI_Motor\motor_def.h(13): error:  #67: expected a "}"
+      OPEN_LOOP = 0b0000,
+..\User\Motor\DJI_Motor\motor_def.h(22): warning:  #12-D: parsing restarts here after previous syntax error
+  } CloseLoopType_e;
+..\User\Motor\DJI_Motor\motor_def.h(63): error:  #20: identifier "MotorType_e" is undefined
+      MotorType_e motor_type;
+..\User\Motor\DJI_Motor\dji_motor.h(75): warning:  #1295-D: Deprecated declaration dji_motor_control - give arg types
+  void dji_motor_control();
+..\User\Tasks\chassis_task.h(149): warning:  #1295-D: Deprecated declaration PID_init_outer - give arg types
+  void PID_init_outer();
+../Core/Src/main.c(121): warning:  #223-D: function "All_Init" declared implicitly
+    All_Init();
+../Core/Src/main.c: 5 warnings, 2 errors
+compiling stm32f4xx_hal_timebase_tim.c...
+compiling can.c...
+compiling spi.c...
+compiling tim.c...
+compiling stm32f4xx_hal_rcc.c...
+compiling stm32f4xx_hal_can.c...
+compiling usart.c...
+compiling stm32f4xx_hal_tim_ex.c...
+compiling stm32f4xx_hal_tim.c...
+compiling gpio.c...
+compiling stm32f4xx_hal_rcc_ex.c...
+compiling stm32f4xx_hal_flash.c...
+compiling stm32f4xx_hal_flash_ex.c...
+compiling stm32f4xx_hal_msp.c...
+compiling dma.c...
+compiling croutine.c...
+compiling event_groups.c...
+compiling list.c...
+compiling queue.c...
+compiling stream_buffer.c...
+compiling timers.c...
+compiling stm32f4xx_hal_flash_ramfunc.c...
+compiling tasks.c...
+compiling heap_4.c...
+compiling port.c...
+compiling stm32f4xx_hal_gpio.c...
+compiling stm32f4xx_hal_dma_ex.c...
+compiling stm32f4xx_hal_dma.c...
+compiling stm32f4xx_hal_pwr.c...
+compiling stm32f4xx_hal_pwr_ex.c...
+compiling stm32f4xx_hal_cortex.c...
+compiling stm32f4xx_hal.c...
+compiling stm32f4xx_hal_exti.c...
+compiling system_stm32f4xx.c...
+compiling chassis_task.c...
+..\User\Common\PID\pid.h(61): warning:  #1295-D: Deprecated declaration PID_init_outer - give arg types
+  void PID_init_outer();
+..\User\Motor\DJI_Motor\motor_def.h(13): error:  #67: expected a "}"
+      OPEN_LOOP = 0b0000,
+..\User\Motor\DJI_Motor\motor_def.h(22): warning:  #12-D: parsing restarts here after previous syntax error
+  } CloseLoopType_e;
+..\User\Motor\DJI_Motor\motor_def.h(63): error:  #20: identifier "MotorType_e" is undefined
+      MotorType_e motor_type;
+..\User\Motor\DJI_Motor\dji_motor.h(75): warning:  #1295-D: Deprecated declaration dji_motor_control - give arg types
+  void dji_motor_control();
+..\User\Tasks\chassis_task.h(149): warning:  #1295-D: Deprecated declaration PID_init_outer - give arg types
+  void PID_init_outer();
+..\User\Tasks\chassis_task.c(77): error:  #20: identifier "SPEED_LOOP" is undefined
+              .outer_loop_type = SPEED_LOOP,
+..\User\Tasks\chassis_task.c(78): error:  #20: identifier "CURRENT_LOOP" is undefined
+              .close_loop_type = SPEED_LOOP | CURRENT_LOOP,
+..\User\Tasks\chassis_task.c(125): warning:  #223-D: function "PID_Init_All" declared implicitly
+  	PID_Init_All();
+..\User\Tasks\chassis_task.c(126): warning:  #223-D: function "Filter_Init_All" declared implicitly
+  	Filter_Init_All();
+..\User\Tasks\chassis_task.c(127): warning:  #223-D: function "CAN_Config" declared implicitly
+  	CAN_Config();
+..\User\Tasks\chassis_task.c(128): warning:  #223-D: function "Seed_Init" declared implicitly
+  	Seed_Init();
+..\User\Tasks\chassis_task.c(129): warning:  #223-D: function "Ball_Init" declared implicitly
+  	Ball_Init();
+..\User\Tasks\chassis_task.c(133): error:  #20: identifier "grap_ifo" is undefined
+  	grap_ifo.grap_arrive = 0;
+..\User\Tasks\chassis_task.c(136): error:  #136: struct "<unnamed>"  has no field "protect_flag"
+  	robot_ifo.protect_flag = 1;
+..\User\Tasks\chassis_task.c(137): error:  #136: struct "<unnamed>"  has no field "disable_rotation_flag"
+  	robot_ifo.disable_rotation_flag = 0;
+..\User\Tasks\chassis_task.c(145): error:  #20: identifier "CHOICE_MOO" is undefined
+  	robot_ifo.task_type = CHOICE_MOO;
+..\User\Tasks\chassis_task.c(157): warning:  #223-D: function "Calc_Send_Task" declared implicitly
+  	Calc_Send_Task();
+..\User\Tasks\chassis_task.c(195): error:  #20: identifier "CHECK_TICK_SMALL" is undefined
+  			check_tick  = CHECK_TICK_SMALL;
+..\User\Tasks\chassis_task.c(196): error:  #20: identifier "CHASSIS_TOL_BIG" is undefined
+  			chassis_tol = CHASSIS_TOL_BIG;
+..\User\Tasks\chassis_task.c(200): error:  #20: identifier "CHECK_TICK_BIG" is undefined
+  			check_tick  = CHECK_TICK_BIG;
+..\User\Tasks\chassis_task.c(201): error:  #20: identifier "CHASSIS_TOL_SMALL" is undefined
+  			chassis_tol = CHASSIS_TOL_SMALL;
+..\User\Tasks\chassis_task.c(304): error:  #20: identifier "LOW_DES_COM" is undefined
+  			if(fabs(robot_ifo.pos_error.ErrorposY) < LOW_DES_COM && seed_ifo.seed_state == SEED_STATE_MOVE && seed_ifo.cnm == 0)
+..\User\Tasks\chassis_task.c(304): error:  #136: struct "<unnamed>"  has no field "cnm"
+  			if(fabs(robot_ifo.pos_error.ErrorposY) < LOW_DES_COM && seed_ifo.seed_state == SEED_STATE_MOVE && seed_ifo.cnm == 0)
+..\User\Tasks\chassis_task.c(306): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  				 vy_limit = vy_limit - 1.45;
+..\User\Tasks\chassis_task.c(307): error:  #20: identifier "LOW_SPEED" is undefined
+  				 if(vy_limit <=LOW_SPEED)
+..\User\Tasks\chassis_task.c(345): error:  #20: identifier "LOW_DES_COM" is undefined
+  				if(fabs(robot_ifo.pos_error.ErrorposY) < LOW_DES_COM &&         \
+..\User\Tasks\chassis_task.c(346): error:  #20: identifier "crack_posY" is undefined
+  						robot_ifo.pos_target.pos_y == crack_posY && seed_ifo.cnm == 0)
+..\User\Tasks\chassis_task.c(346): error:  #136: struct "<unnamed>"  has no field "cnm"
+  						robot_ifo.pos_target.pos_y == crack_posY && seed_ifo.cnm == 0)
+..\User\Tasks\chassis_task.c(348): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+            			vy_limit = vy_limit - 1.45;
+..\User\Tasks\chassis_task.c(349): error:  #20: identifier "LOW_SPEED" is undefined
+  					if(vy_limit <= LOW_SPEED)
+..\User\Tasks\chassis_task.c(354): error:  #20: identifier "RUN_S" is undefined
+            			vy_limit = RUN_S;
+..\User\Tasks\chassis_task.c(387): warning:  #223-D: function "PID_Calc" declared implicitly
+  	PID_Calc(&pid_DJI_outer[0], robot_ifo.pos_error.ErrorposX, 0);
+..\User\Tasks\chassis_task.c(440): error:  #159: declaration is incompatible with previous "Filter_Init_All"  (declared at line 126)
+  void Filter_Init_All(void)
+..\User\Tasks\chassis_task.c(462): error:  #20: identifier "REMAKE_TX" is undefined
+  	if(remake_tick <= REMAKE_TX)
+..\User\Tasks\chassis_task.c(463): error:  #20: identifier "REMAKE_SPEEDX" is undefined
+  		temp_x = REMAKE_SPEEDX * sign_t;
+..\User\Tasks\chassis_task.c(466): error:  #20: identifier "REMAKE_TY" is undefined
+  	if(remake_tick <= REMAKE_TY)
+..\User\Tasks\chassis_task.c(467): error:  #20: identifier "REMAKE_SPEEDY" is undefined
+  		temp_y = REMAKE_SPEEDY;
+..\User\Tasks\chassis_task.c(470): error:  #20: identifier "REMAKE_TY" is undefined
+  	if(250 + REMAKE_TY > remake_tick && remake_tick > REMAKE_TY)
+..\User\Tasks\chassis_task.c(476): warning:  #223-D: function "Input_TarSpeed_Chassis" declared implicitly
+  	Input_TarSpeed_Chassis(temp_x,temp_y,0);
+..\User\Tasks\chassis_task.c(477): error:  #20: identifier "REMAKE_TY" is undefined
+  	if(REMAKE_TY + 320 > remake_tick && remake_tick > 300 + REMAKE_TY)
+..\User\Tasks\chassis_task.c(479): error:  #20: identifier "real_lv100" is undefined
+  		CD_SETX(&huart3, -(float)real_lv100);
+..\User\Tasks\chassis_task.c(481): error:  #20: identifier "REMAKE_TY" is undefined
+  	if(REMAKE_TY+320 <= remake_tick)
+..\User\Tasks\chassis_task.c(484): warning:  #223-D: function "Input_TarPos_Chassis" declared implicitly
+  		Input_TarPos_Chassis(0, robot_ifo.pos_target.pos_y, 0);
+..\User\Tasks\chassis_task.c: 15 warnings, 29 errors
+compiling stm32f4xx_hal_spi.c...
+compiling stm32f4xx_hal_uart.c...
+compiling cmsis_os2.c...
+"2024_R2_Keil\2024_R2_Keil.axf" - 36 Error(s), 30 Warning(s).
+
+<h2>Software Packages used:</h2>
+
+Package Vendor: ARM
+                http://www.keil.com/pack/ARM.CMSIS.5.7.0.pack
+                ARM.CMSIS.5.7.0
+                CMSIS (Cortex Microcontroller Software Interface Standard)
+   * Component: CORE Version: 5.4.0
+
+Package Vendor: Keil
+                https://www.keil.com/pack/Keil.STM32F4xx_DFP.3.1.1.pack
+                Keil.STM32F4xx_DFP.3.1.1
+                STMicroelectronics STM32F4 Series Device Support
+
+<h2>Collection of Component include folders:</h2>
+  .\RTE\_2024_R2_Keil
+  D:\A-StudySoft\Keil\ArmPacks\ARM\CMSIS\5.7.0\CMSIS\Core\Include
+
+<h2>Collection of Component Files used:</h2>
+
+   * Component: ARM::CMSIS:CORE:5.4.0
+      Include file:  CMSIS\Core\Include\tz_context.h
+Target not created.
+Build Time Elapsed:  00:00:48
+</pre>
+</body>
+</html>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/BSP/CAN_TRX/can_trx.c" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/BSP/CAN_TRX/can_trx.h" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/BSP/USER_CONFIG/user_config.c" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/BSP/USER_LIB/user_lib.c" charset="GBK" />
+  </component>
+</project>
