@@ -1,14 +1,12 @@
 #ifndef CHASSIS_TASK_H
 #define CHASSIS_TASK_H
+
+
 #include "main.h"
-#include "chassis_task.h"
 #include "pid.h"
 #include "user_lib.h"
-#include "can.h"
 #include "can_trx.h"
 #include "pid.h"
-#include "math.h"
-#include "tim.h"
 #include "seed_task.h"
 
 #define TIMEFORACC 0.03f
@@ -106,7 +104,8 @@ typedef struct
 
 typedef struct
 {
-	uint16_t sac;
+	uint32_t sac;
+
 	uint8_t limit_vy_flag;
   	uint8_t red_single_flag;
 	uint8_t blue_single_flag;
@@ -128,6 +127,7 @@ typedef struct
 	int16_t init_tick;
 	
 	uint8_t chassis_arrive;
+
 	float check_flag;
 	float check_flag_2;
 	float check_flag_3;
@@ -156,3 +156,4 @@ extern float controller_vx;
 extern float controller_vy;
 extern float controller_wz;
 #endif
+

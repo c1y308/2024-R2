@@ -5,7 +5,6 @@
 #include "main.h"
 #include "user_lib.h"
 #include "can_trx.h"
-#include "chassis_task.h"
 
 
 #define M3508_DANGER_OUT 3500

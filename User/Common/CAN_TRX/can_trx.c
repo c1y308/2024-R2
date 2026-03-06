@@ -1,15 +1,13 @@
-#include "can.h"
 #include "chassis_task.h"
-#include "main.h"
 #include "can_trx.h"
 
 
-int16_t send_current[8];
-int16_t send_current_CAN2[8];
-int16_t sbus_channel[16];
-uint16_t PWM_speed[3];
+static int16_t send_current[8];
+static int16_t send_current_CAN2[8];
+static int16_t sbus_channel[16];
+static uint16_t PWM_speed[3];
 
-static UserCANHandle_t *can_instance[CAN_MX_REGISTER_CNT] = {NULL};
+static UserCANHandle_t *can_instance[CAN_MAX_REGISTER_CNT] = {NULL};
 static uint8_t idx;
 
 
@@ -42,16 +40,16 @@ UserCANHandle_t *CAN_register(CANInitConfig_t *config)
 {
     if (idx == 0)
     {
-        CANServiceInit(); // ????????,?????????????
+        CANServiceInit(); // ,
         LOGINFO("[bsp_can] CAN Service Init");
     }
-    if (idx >= CAN_MX_REGISTER_CNT) // ????????????
+    if (idx >= CAN_MAX_REGISTER_CNT) // 
     {
         while (1)
             LOGERROR("[bsp_can] CAN instance exceeded MAX num, consider balance the load of CAN bus");
     }
     for (size_t i = 0; i < idx; i++)
-    { // ????????????????????????rxid???????????????????????dji?????rxid????????
+    { // rxiddjirxid
         if (can_instance[i]->can_handle == config->can_handle && can_instance[i]->rx_id == config->rx_id)
         {
             while (1)
@@ -59,39 +57,39 @@ UserCANHandle_t *CAN_register(CANInitConfig_t *config)
         }
     }
     
-    UserCANHandle_t *instance = (UserCANHandle_t *)malloc( sizeof(UserCANHandle_t) ); // ??????
-    memset(instance, 0, sizeof(UserCANHandle_t));                                     // ???????¦Ä????0,??????????
+    UserCANHandle_t *instance = (UserCANHandle_t *)malloc( sizeof(UserCANHandle_t) ); // 
+    memset(instance, 0, sizeof(UserCANHandle_t));                                     // 0,
 
-    // ???§Ù???????????
-    instance->txconf.StdId = config->tx_id; // ????id
-    instance->txconf.IDE = CAN_ID_STD;      // ?????id,???id?????CAN_ID_EXT(?????????)
-    instance->txconf.RTR = CAN_RTR_DATA;    // ?????????
-    instance->txconf.DLC = 0x08;            // ??????????8
+    // 
+    instance->txconf.StdId = config->tx_id; // id
+    instance->txconf.IDE = CAN_ID_STD;      // id,idCAN_ID_EXT()
+    instance->txconf.RTR = CAN_RTR_DATA;    // 
+    instance->txconf.DLC = 0x08;            // 8
 
-    // ????????can????????????????????id
+    // canid
     instance->can_handle = config->can_handle;
-    instance->tx_id = config->tx_id;  // ???????????????????›¥??txconf??
+    instance->tx_id = config->tx_id;  // txconf
     instance->rx_id = config->rx_id;
     instance->can_module_callback = config->can_module_callback;
-    instance->id = config->id;  // ???DJIMotor_t???????
+    instance->id = config->id;  // DJIMotor_t
 
-    CANAddFilter(instance);         // ????CAN??????????
-    can_instance[idx++] = instance; // ????????›Ôcan_instance??
+    CANAddFilter(instance);         // CAN
+    can_instance[idx++] = instance; 
 
-    return instance; // ????can??????
+    return instance;
 }
 
 
-/**********************************CAN1??????????*****************************************/
+
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 {
-    CANFIFOxCallback(hcan, CAN_RX_FIFO0); // ???????????§Õ??????????????
+    CANFIFOxCallback(hcan, CAN_RX_FIFO0); // 
 }
 
 
 void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan)
 {
-    CANFIFOxCallback(hcan, CAN_RX_FIFO1); // ???????????§Õ??????????????
+    CANFIFOxCallback(hcan, CAN_RX_FIFO1); // 
 }
 
 
@@ -99,18 +97,18 @@ static void CANFIFOxCallback(CAN_HandleTypeDef *_hcan, uint32_t fifox)
 {
     static CAN_RxHeaderTypeDef rxconf;
     uint8_t can_rx_buff[8];
-    while (HAL_CAN_GetRxFifoFillLevel(_hcan, fifox)) // FIFO?????,?§á??????????§Ø???§Ø?????????
+    while (HAL_CAN_GetRxFifoFillLevel(_hcan, fifox)) // FIFO,
     {
-        HAL_CAN_GetRxMessage(_hcan, fifox, &rxconf, can_rx_buff); // ??FIFO?§Ý??????
+        HAL_CAN_GetRxMessage(_hcan, fifox, &rxconf, can_rx_buff); // FIFO
         for (size_t i = 0; i < idx; i++)
-        {   // ??????????StdID???
+        {   // StdID
             if (_hcan == can_instance[i]->can_handle && rxconf.StdId == can_instance[i]->rx_id)
             {
-                if (can_instance[i]->can_module_callback != NULL) // ????????????????
+                if (can_instance[i]->can_module_callback != NULL) // 
                 {
-                    can_instance[i]->rx_len = rxconf.DLC;                      // ?????????????????
-                    memcpy(can_instance[i]->rx_buff, can_rx_buff, rxconf.DLC); // ???????????????
-                    can_instance[i]->can_module_callback(can_instance[i]);     // ???????????????????????
+                    can_instance[i]->rx_len = rxconf.DLC;                      // 
+                    memcpy(can_instance[i]->rx_buff, can_rx_buff, rxconf.DLC); // 
+                    can_instance[i]->can_module_callback(can_instance[i]);     // 
                 }
                 return;
             }
@@ -124,9 +122,9 @@ uint8_t CANTransmit(UserCANHandle_t *_instance, float timeout)
     static uint32_t busy_count;
     static volatile float wait_time __attribute__((unused)); // for cancel warning
     float dwt_start = DWT_GetTimeline_ms();
-    while (HAL_CAN_GetTxMailboxesFreeLevel(_instance->can_handle) == 0) // ??????????
+    while (HAL_CAN_GetTxMailboxesFreeLevel(_instance->can_handle) == 0) // 
     {
-        if (DWT_GetTimeline_ms() - dwt_start > timeout) // ???
+        if (DWT_GetTimeline_ms() - dwt_start > timeout) // 
         {
             LOGWARNING("[bsp_can] CAN MAILbox full! failed to add msg to mailbox. Cnt [%d]", busy_count);
             busy_count++;
@@ -146,8 +144,8 @@ uint8_t CANTransmit(UserCANHandle_t *_instance, float timeout)
 
 void Set_PWM_Motor_Speed(CAN_HandleTypeDef *hcan, uint16_t speed1, uint16_t speed2, uint16_t speed3, uint16_t speed4)
 {
-    CAN_TxHeaderTypeDef  ZDY_tx_message;    //????CAN????
-    uint8_t              can_send_data[8];  //????????
+    CAN_TxHeaderTypeDef  ZDY_tx_message;    //CAN
+    uint8_t              can_send_data[8];  //
     uint32_t send_mail_box;
     ZDY_tx_message.StdId = 0xA7;
     ZDY_tx_message.IDE = CAN_ID_STD;

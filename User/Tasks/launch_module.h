@@ -1,7 +1,7 @@
 #ifndef BALL_TASK_H
 #define BALL_TASK_H
 #include "main.h"
-#include "chassis_task.h"
+#include "chassis_module.h"
 #include "dji_motor.h"
 #define BALL_LEFT 1
 #define BALL_RIGHT 2
@@ -10,7 +10,7 @@
 
 typedef enum
 {
-    BALL_STATE_IDLE = 0x00,
+    BALL_STATE_IDLE  = 0x00,
     BALL_STATE_CHECK = 0x01,
     BALL_STATE_LINE_CHANGE_F,
     BALL_STATE_LINE_CHANGE_S,
@@ -54,6 +54,7 @@ typedef struct
 }BallInfo_t;
 
 extern int8_t ball_temp[3];
+
 void ball_task(void);
 
 

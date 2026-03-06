@@ -1,7 +1,7 @@
 #ifndef GRAP_TASK_H
 #define GRAP_TASK_H
 #include "main.h"
-#include "chassis_task.h"
+#include "chassis_module.h"
 #include "dji_motor.h"
 #include "user_config.h"
 typedef enum{
@@ -27,7 +27,6 @@ typedef enum{
 }GrapState_e;
 
 
-
 typedef struct
 {
     GrapState_e grap_last_state;
@@ -50,30 +49,23 @@ typedef struct
 	float ErrorLift[2];
 }grap_t;
 
+
 extern DjiMotorHandle_t *motor_yaw_left, *motor_yaw_right, *motor_lift_left, *motor_lift_right, *motor_grap_left, *motor_grap_right;
 
 
 extern grap_t grap_ifo;
-void grap_init(void);
+
+void grap_motor_init(void);
+void grap_init(grap_t *grap_ifo);
+void grap_seed(grap_t *grap_ifo);
+void grap_seed(grap_t *grap_ifo);
+void put_seed(grap_t *grap_ifo);
+
+
 void out_only(void);
 void grap_only(void);
 void set_grap_motor_zero_speed(void);
 
-void Grap_Init_Wait(void);
-void Grap_Cal_2_Speed(void);
 
-void grap_storage_pre(void);
-void grap_storage_last(void);
-void grap_storage_lift(void);
-
-
-void out_storage(void);
-
-void Out_single(void);
-
-
-void Grap_Init_Single(void);
-
-void Grapping_Callback(void);
 
 #endif

@@ -1,13 +1,13 @@
 #ifndef USER_CONFIG_H
 #define USER_CONFIG_H
 #include "main.h"
-#include "chassis_task.h"
+#include "chassis_module.h"
 
 #define CHOICE_MOO  get_seed_type
 
 extern float RUN_S;
 #define LOW_SPEED 0.2//
-#define LOW_DES_COM 700//
+#define LOW_DES_COM 700  // 开始减速的距离
 #define INIT_OUT_TICK 70//
 
 #define SEED_FORWARD_DES 330//

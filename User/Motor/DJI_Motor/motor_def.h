@@ -37,7 +37,11 @@ typedef struct
     CloseLoopType_e outer_loop_type;        // 最外层的闭环,未设置时默认为最高级的闭环
     CloseLoopType_e close_loop_type;        // 使用几个闭环(串级)
     MotorDirection_e motor_direction;       // 是否反转
-} MotorControlSetting_t;
+
+    PIDInitConfig_t current_PID;
+    PIDInitConfig_t speed_PID;
+    PIDInitConfig_t angle_PID;
+} MotorControllerInitConfig_t;
 
 
 typedef struct
@@ -52,16 +56,7 @@ typedef struct
 
 typedef struct
 {
-    PIDInitConfig_t current_PID;
-    PIDInitConfig_t speed_PID;
-    PIDInitConfig_t angle_PID;
-} MotorControllerInitConfig_t;
-
-
-typedef struct
-{
-    MotorControlSetting_t       controller_setting_init_config;
-    MotorControllerInitConfig_t controller_param_init_config;
+    MotorControllerInitConfig_t  controller_init_config;
     MotorType_e motor_type;
 
     UserCANHandle_t *motor_can_handle; // 电机CAN实例

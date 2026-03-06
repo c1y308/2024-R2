@@ -1,25 +1,11 @@
 {
     "files.associations": {
-        "stdio.h": "c",
-        "uart_handler.h": "c",
-        "stdint.h": "c",
-        "freertos.h": "c",
-        "typeinfo": "c",
-        "bsp_ad7689.h": "c",
-        "main.h": "c",
-        "limits": "c",
-        "ball_task.h": "c",
-        "chassis_task.h": "c",
-        "cctype": "c",
-        "climits": "c",
-        "cmath": "c",
-        "cstdarg": "c",
-        "cstdio": "c",
-        "cstdlib": "c",
-        "type_traits": "c",
-        "cstdint": "c",
-        "stdbool.h": "c",
-        "dji_motor.h": "c",
-        "motor_def.h": "c"
+        "stm32f4xx_hal_def.h": "c",
+        "bsp_usb.h": "c",
+        "usb_device.h": "c",
+        "usbd_cdc.h": "c",
+        "usbd_conf.h": "c",
+        "usbd_desc.h": "c",
+        "usbd_cdc_if.h": "c"
     }
 }

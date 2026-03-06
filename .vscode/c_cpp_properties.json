@@ -1,18 +1,22 @@
 {
     "configurations": [
         {
-            "name": "Win32",
+            "name": "Win32-STM32", // 重命名，标识是STM32开发环境
             "includePath": [
-                "${workspaceFolder}/**" // 包含工作区所有目录下的头文件
+                "${workspaceFolder}/**", // 项目自身代码路径
+                "${workspaceFolder}/Drivers/**", // STM32标准库/HAL库头文件路径（根据你的项目调整）
+                "D:/A-StudySoft/arm-none-eabi/include/**",
+                "${workspaceFolder}/Core/**"
             ],
             "defines": [
-                "_DEBUG",
-                "UNICODE",
-                "_UNICODE"
+                "USE_HAL_DRIVER", // 新增：HAL库必需宏，GPIOA定义依赖此宏
+                "STM32F407xx" // 关键：添加你使用的STM32型号宏（比如F407xx，根据实际芯片改）
             ],
-            "compilerPath": "D:\\A-StudySoft\\mingw64\\bin\\g++.exe",
-            "cStandard": "c17", // C语言标准
-            "intelliSenseMode": "windows-gcc-x64"
+            "cStandard": "c17",
+            "cppStandard": "gnu++14",
+            "compilerPath": "D:/A-StudySoft/arm-none-eabi/bin/arm-none-eabi-gcc.exe", // 关键：指定ARM交叉编译器路径（替换为你的实际路径）
+            "intelliSenseMode": "gcc-arm", // 关键：适配ARM架构的智能感知模式（替代之前的windows-gcc-x86）
+            "configurationProvider": "ms-vscode.makefile-tools" // 保留：让插件同步Makefile中的ARM-GCC配置
         }
     ],
     "version": 4

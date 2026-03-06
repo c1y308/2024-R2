@@ -10,7 +10,7 @@
 #define SPEED_SMOOTH_COEF   0.85f      // 最好大于0.85
 #define CURRENT_SMOOTH_COEF 0.9f       // 必须大于0.9
 #define ECD_ANGLE_COEF_DJI  0.043945f  // (360/8192),将编码器值转化为角度制
-
+#define M3508_MOTOR_RPM_TO_VECTOR 0.000415809748903494517209f
 
 typedef struct 
 {
@@ -46,9 +46,10 @@ typedef struct
 	uint8_t 				motor_id;
 	MotorType_e 			motor_type;
 	
-	MotorControlSetting_t 	settings;
-	MotorController_t 		motor_controller;    // 电机控制参数
-    DjiMotorMeasure_t 		measure;             // 电机测量值
+	MotorControllerInitConfig_t 	settings;
+	MotorController_t 				motor_controller;
+
+    DjiMotorMeasure_t 		measure;           // 电机测量值
 
     MotorState_e   			working_state;
     UserCANHandle_t 	   *motor_can_handle; // 电机CAN实例

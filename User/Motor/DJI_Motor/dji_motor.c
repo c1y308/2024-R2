@@ -26,14 +26,14 @@ DjiMotorHandle_t *djimotor_init(MotorInitConfig_t *config)
     memset(instance, 0, sizeof(DjiMotorHandle_t) );
 
     // motor basic setting 电机基本设置
-    instance->motor_type = config->motor_type;                   // 6020 or 2006 or 3508
-    instance->settings = config->controller_setting_init_config; // 正反转,闭环类型
-    instance->motor_id = config->motor_id;
+    instance->motor_type = config->motor_type;                   // 2006 or 3508
+    instance->settings   = config->controller_init_config; // 正反转,闭环类型,PID参数
+    instance->motor_id   = config->motor_id;
 
-    // motor controller init 电机控制器初始化
-    PID_init(&instance->motor_controller.current_PID, config->controller_param_init_config.current_PID);
-    PID_init(&instance->motor_controller.speed_PID,   config->controller_param_init_config.speed_PID);
-    PID_init(&instance->motor_controller.angle_PID,   config->controller_param_init_config.angle_PID);
+    // motor controller init
+    PID_init(&instance->motor_controller.current_PID, instance->settings.current_PID);
+    PID_init(&instance->motor_controller.speed_PID,   instance->settings.speed_PID);
+    PID_init(&instance->motor_controller.angle_PID,   instance->settings.angle_PID);
 
     // 电机分组,因为至多4个电机可以共用一帧CAN控制报文
     motor_send_grouping(instance, &config->can_init_config);
@@ -182,7 +182,7 @@ void dji_motor_control()
     uint8_t group, num; // 电机组号和组内编号
     int16_t set;        // 电机控制CAN发送设定值
     DjiMotorHandle_t *motor;
-    MotorControlSetting_t *motor_setting; // 电机控制参数
+    MotorControllerInitConfig_t *motor_setting; // 电机控制参数
     MotorController_t *motor_controller;   // 电机控制器
     DjiMotorMeasure_t *measure;           // 电机测量值
     float pid_measure, pid_ref;             // 电机PID测量值和设定值
@@ -195,7 +195,7 @@ void dji_motor_control()
         motor_controller = &motor->motor_controller;
         measure = &motor->measure;
         pid_ref = motor_controller->pid_ref; // 保存设定值,防止motor_controller->pid_ref在计算过程中被修改
-        if (motor_setting->motor_reverse_flag == MOTOR_DIRECTION_REVERSE)
+        if (motor_setting->motor_direction == MOTOR_DIRECTION_REVERSE)
             pid_ref *= -1; // 设置反转
 
         // pid_ref会顺次通过被启用的闭环充当数据的载体
@@ -215,7 +215,7 @@ void dji_motor_control()
             pid_ref = PID_calc(&motor_controller->speed_PID, pid_measure, pid_ref);
         }
         
-        if (motor_setting->motor_reverse_flag == MOTOR_DIRECTION_REVERSE)
+        if (motor_setting->motor_direction == MOTOR_DIRECTION_REVERSE)
             pid_ref *= -1;
 
         // 获取最终输出

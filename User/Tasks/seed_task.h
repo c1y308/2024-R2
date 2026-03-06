@@ -1,8 +1,10 @@
 #ifndef SEED_TASK_H
 #define SEED_TASK_H
 #include "main.h"
-#include "chassis_task.h"
+#include "chassis_module.h"
 #include "dji_motor.h"
+#include "can_trx.h"
+#include "grap_module.h"
 typedef enum 
 { 
 	SEED_STATE_INIT = 1, 
@@ -37,8 +39,6 @@ typedef struct
 
 
 extern SeedIfo_t seed_ifo;
-
-void seed_motor_init(void);
 
 void seedtask_init(void);
 void transition_task(void);

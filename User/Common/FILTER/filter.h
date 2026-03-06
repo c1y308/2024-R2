@@ -4,7 +4,6 @@
 #ifdef __cplusplus
 extern "C"{
 #endif
-#include "arm_math.h"
 #include "stdint.h"
 #include "main.h"
 
