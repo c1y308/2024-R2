@@ -1,13 +1,12 @@
 #ifndef CHASSIS_TASK_H
 #define CHASSIS_TASK_H
 
-
-#include "main.h"
 #include "pid.h"
 #include "user_lib.h"
 #include "can_trx.h"
 #include "pid.h"
 #include "seed_task.h"
+#include <stdbool.h>
 
 #define TIMEFORACC 0.03f
 #define M3508_MOTOR_SPEED_PID_KP 10000.0f
@@ -16,6 +15,8 @@
 
 #define M3508_MOTOR_SPEED_PID_POUT_LIMIT 8000
 #define M3508_MOTOR_SPEED_PID_IOUT_LIMIT 1000
+
+
 
 
 typedef enum
@@ -145,13 +146,9 @@ void chassis_pos_calc(Robotifo_t *chassis_auto_build);
 void input_tarspeed_chassis(float tarx,float tary,float tarz);
 void input_tarpos_chassis(float tarpx, float tarpy,float tarpz);
 void stop_chassis(void);
-
+bool chassis_arrive_check(Robotifo_t *robot_ifo);
 void PID_init_outer();
-// void Chassis_Set_Control_Test(Robotifo_t *ifo);
-// void All_Init(void);
-// void Chassis_Callback(void);
-// void Filter_Init_All(void);
-// void Remake_Task(void);
+
 extern float controller_vx;
 extern float controller_vy;
 extern float controller_wz;

@@ -4,6 +4,13 @@ grap_t grap_ifo;
 
 
 DjiMotorHandle_t *motor_yaw_left, *motor_yaw_right, *motor_lift_left, *motor_lift_right, *motor_grap_left, *motor_grap_right;
+
+
+bool check_grap_arrive(grap_t *grap_ifo){
+	return grap_ifo->grap_arrive == 1;
+}
+
+
 void grap_motor_init()
 {
     MotorInitConfig_t chassis_motor_config = {
@@ -316,7 +323,7 @@ void grap_task(grap_t *grap_ifo){
 				grap_ifo->grap_tick = 0;
 				grap_ifo->grap_arrive = 0;
                 grap_ifo->grap_last_state = GARP_STATE_LIFT;
-				grap_ifo->grap_state = GRAP_STATE_PRE_DOWN;
+				grap_ifo->grap_state = GRAP_STATE_PRE_PUT;
 			}
 			else
 			{
@@ -332,7 +339,7 @@ void grap_task(grap_t *grap_ifo){
 			break;
 		}
 		/***********************************************************************************************/
-		case GRAP_STATE_PRE_DOWN:{
+		case GRAP_STATE_PRE_PUT:{
 			if(seed_ifo.putm_count % 2 == 0)  // 降低高度预放苗
 			{
 				if(seed_ifo.run_tick <= 280)
@@ -346,13 +353,13 @@ void grap_task(grap_t *grap_ifo){
 					dji_motor_setref(motor_lift_right,  0);
 				}
                 grap_ifo->grap_state = GRAP_STATE_WAIT_AND_PUT;
-                grap_ifo->grap_last_state = GRAP_STATE_PRE_DOWN;
+                grap_ifo->grap_last_state = GRAP_STATE_PRE_PUT;
 				input_tarpos_chassis(sign_t * put_pos_x[seed_ifo.pos_index - 2], put_pos_y[0], 0);
 			}
 			else  // 抓取存储在车上的苗并预放高度
 			{
 				grap_ifo->grap_state = GRAP_STATE_PUT_ROTATE;
-                grap_ifo->grap_last_state = GRAP_STATE_PRE_DOWN;
+                grap_ifo->grap_last_state = GRAP_STATE_PRE_PUT;
 				input_tarpos_chassis(sign_t * put_pos_x[seed_ifo.pos_index - 2], put_pos_y[1], 0);
 			}
 		}

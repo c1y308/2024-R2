@@ -22,6 +22,17 @@ typedef enum
 } SeedState_e;
 
 
+typedef enum {
+    GRAP_COUNT_EVEN,  // 偶数次触发
+    GRAP_COUNT_ODD,    // 奇数次触发
+} GrapParity_e;
+
+
+typedef enum{
+	CHASSIS_PARITY_EVEN,  // 偶数次触发
+	CHASSIS_PARITY_ODD,    // 奇数次触发
+} ChassisParity_e;
+
 typedef struct
 {
 	SeedState_e seed_state;
@@ -42,7 +53,7 @@ extern SeedIfo_t seed_ifo;
 
 void seedtask_init(void);
 void transition_task(void);
-void plant_task(void);
+void plant_task(grap_t *grap_ifo);
 
 void GP_Task_Single(void);
 void Ball_Task_Single(void);

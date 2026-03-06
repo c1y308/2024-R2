@@ -182,7 +182,7 @@ void chassis_feedback_update(Robotifo_t *robot_ifo)
 }
 
 
-void chassis_arrive_check(Robotifo_t *robot_ifo){
+bool chassis_arrive_check(Robotifo_t *robot_ifo){
 	static int16_t chassis_tol = 0;
 	static int16_t check_tick = 0;
 	static int16_t cur_tick = 0;
@@ -217,9 +217,12 @@ void chassis_arrive_check(Robotifo_t *robot_ifo){
 				{
 					cur_tick = 0;
 					robot_ifo->chassis_arrive = 1;
+					return true;
 				}
-			}else
+			}else{
 				robot_ifo->chassis_arrive = 0;
+				return false;
+			}
 			break;
 		}
 		case CHASSIS_MODE_MIX_SEED:{
@@ -241,9 +244,12 @@ void chassis_arrive_check(Robotifo_t *robot_ifo){
 					robot_ifo->stop_crack = 0;
 					cur_tick = 0;
 					robot_ifo->chassis_arrive = 1;
+					return true;
 				}
-			}else
+			}else{
 				robot_ifo->chassis_arrive = 0;
+				return false;
+			}
 			break;
 		}
 		case CHASSIS_HYBRID_XS:
@@ -255,10 +261,12 @@ void chassis_arrive_check(Robotifo_t *robot_ifo){
 				{
 					cur_tick = 0;
 					robot_ifo->chassis_arrive = 1;
+					return true;
 				}
-			}
-			 else
+			}else{
 				robot_ifo->chassis_arrive = 0;
+				return false;
+			}
 			break;
 		}
 		case CHASSIS_HYBRID_YS:
@@ -270,11 +278,12 @@ void chassis_arrive_check(Robotifo_t *robot_ifo){
 				{
 					cur_tick = 0;
 					robot_ifo->chassis_arrive = 1;
+					return true;
 				}
-			}
-			 else
+			}else{
 				robot_ifo->chassis_arrive = 0;
-
+				return false;
+			}
 			break;
 		}
 		case CHASSIS_HYBRID_XSYS:
@@ -286,16 +295,18 @@ void chassis_arrive_check(Robotifo_t *robot_ifo){
 				{
 					cur_tick = 0;
 					robot_ifo->chassis_arrive = 1;
+					return true;
 				}
-			}
-			 else
+			}else{
 				robot_ifo->chassis_arrive = 0;
-
+				return false;
+			}
 			break;
 		}
 		
 		default:{
 			robot_ifo->chassis_arrive = 1;
+			return true;
 			break;
 		}
 	}
@@ -486,7 +497,7 @@ void Remake_Task(Robotifo_t *robot_ifo)
 	  temp_x = -0.4 * sign_t;
 		temp_y = 0;
 	}
-	Input_TarSpeed_Chassis(temp_x,temp_y,0);
+	Input_TarSpeed_Chassis(temp_x,temp_y, 0);
 	if(REMAKE_TY + 320 > remake_tick && remake_tick > 300 + REMAKE_TY)
 	{
 		CD_SETX(&huart3, -(float)real_lv100);
@@ -494,9 +505,9 @@ void Remake_Task(Robotifo_t *robot_ifo)
 	if(REMAKE_TY+320 <= remake_tick)
 	{
 	  CD_SETY(&huart3,0);
-		Input_TarPos_Chassis(0, robot_ifo.pos_target.pos_y, 0);
+		Input_TarPos_Chassis(0, robot_ifo->pos_target.pos_y, 0);
 		remake_tick = 0;
-		robot_ifo.task_type = TASK_TYPE_BALL;
+		robot_ifo->task_type = TASK_TYPE_BALL;
 	}
 }
 

@@ -1,9 +1,10 @@
 #ifndef GRAP_TASK_H
 #define GRAP_TASK_H
-#include "main.h"
 #include "chassis_module.h"
 #include "dji_motor.h"
 #include "user_config.h"
+#include <stdbool.h>
+
 typedef enum{
 	GARP_STATE_IDLE = 0,
 	GARP_STATE_INIT = 1,
@@ -18,7 +19,7 @@ typedef enum{
 
 	GARP_STATE_LIFT,  // 抓取场地上的苗之后抬升
 
-	GRAP_STATE_PRE_DOWN,
+	GRAP_STATE_PRE_PUT,
 
 	GRAP_STATE_PUT_ROTATE,
 	GRAP_STATE_PUT_ROTATEBACK,
@@ -54,7 +55,7 @@ extern DjiMotorHandle_t *motor_yaw_left, *motor_yaw_right, *motor_lift_left, *mo
 
 
 extern grap_t grap_ifo;
-
+bool check_grap_arrive(grap_t *grap_ifo);
 void grap_motor_init(void);
 void grap_init(grap_t *grap_ifo);
 void grap_seed(grap_t *grap_ifo);
