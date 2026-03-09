@@ -17,6 +17,7 @@ GrapParity_e get_grap_parity(SeedIfo_t *seed_ifo){
 }
 
 
+<<<<<<< Updated upstream
 ChassisParity_e get_chassis_parity(SeedIfo_t *seed_ifo){
 	if(seed_ifo->move_count % 2 == 0)
 		return CHASSIS_PARITY_EVEN;
@@ -26,6 +27,9 @@ ChassisParity_e get_chassis_parity(SeedIfo_t *seed_ifo){
 
 
 void seedtask_init(SeedIfo_t *seed_ifo)
+=======
+void plant_task(Robotifo_t *robot_ifo, grap_t *grap_ifo)
+>>>>>>> Stashed changes
 {
   	seed_ifo->seed_state = SEED_STATE_INIT;//transition_f
 	seed_ifo->run_tick   = 0;
@@ -45,7 +49,11 @@ void plant_task(SeedIfo_t *seed_ifo, grap_t *grap_ifo, Robotifo_t *robot_ifo)
 			grap_init(grap_ifo);
 
 			robot_ifo->chassis_state = CHASSIS_MODE_MANUAL;
+<<<<<<< Updated upstream
 		  	if(seed_ifo->run_tick <= INIT_OUT_TICK)
+=======
+		  	if(seed_ifo.run_tick <= INIT_OUT_TICK)
+>>>>>>> Stashed changes
 			{
 				input_tarspeed_chassis(0, 1, 0);
 			}
@@ -61,13 +69,21 @@ void plant_task(SeedIfo_t *seed_ifo, grap_t *grap_ifo, Robotifo_t *robot_ifo)
 			robot_ifo->tol_state = CHASSIS_MODE_TOL_BIG;
 			robot_ifo->chassis_state = CHASSIS_MODE_AUTO;
 
+<<<<<<< Updated upstream
 			if(chassis_arrive_check(robot_ifo) == true)
+=======
+			if(robot_ifo->chassis_arrive == 1)
+>>>>>>> Stashed changes
 			{
 				seed_ifo->seed_state = SEED_STATE_MOVE;
 			}
 			else
 			{
+<<<<<<< Updated upstream
 				input_tarpos_chassis(sign_t * seed_pos_x[5 - seed_ifo->pos_index], SEED_FORWARD_DES, 0);
+=======
+				input_tarpos_chassis(robot_ifo, sign_t * seed_pos_x[5 - seed_ifo.pos_index], SEED_FORWARD_DES, 0);
+>>>>>>> Stashed changes
 			}
 			break;
 		}
@@ -75,8 +91,13 @@ void plant_task(SeedIfo_t *seed_ifo, grap_t *grap_ifo, Robotifo_t *robot_ifo)
     	{
 			robot_ifo->tol_state = CHASSIS_MODE_TOL_SMALL;
 
+<<<<<<< Updated upstream
 		    if( (get_chassis_parity(seed_ifo) == CHASSIS_PARITY_EVEN && chassis_arrive_check(robot_ifo) == true) ||   // 
 		  	    (get_chassis_parity(seed_ifo) == CHASSIS_PARITY_ODD  && chassis_arrive_check(robot_ifo) == true && check_grap_arrive(grap_ifo) == true) ) 
+=======
+		    if((seed_ifo.move_count % 2 == 0 && robot_ifo->chassis_arrive == 1) ||   // 
+		  	   (seed_ifo.move_count % 2 != 0 && robot_ifo->chassis_arrive == 1 && grap_ifo->grap_arrive == 1) ) 
+>>>>>>> Stashed changes
 			{                           
 				seed_ifo->move_count++;
 				seed_ifo->pos_index++;
@@ -84,13 +105,21 @@ void plant_task(SeedIfo_t *seed_ifo, grap_t *grap_ifo, Robotifo_t *robot_ifo)
 				seed_ifo->run_tick = 0;
 
 				robot_ifo->limit_vy_flag = 0;
+<<<<<<< Updated upstream
 				seed_ifo->seed_state = SEED_STATE_GET;
+=======
+				seed_ifo.seed_state = SEED_STATE_GET;
+>>>>>>> Stashed changes
 			}
 			else
 			{
 				robot_ifo->limit_vy_flag = 1;
 
+<<<<<<< Updated upstream
 				input_tarpos_chassis(sign_t * seed_pos_x[5 - seed_ifo->pos_index], crack_posY, 0);
+=======
+				input_tarpos_chassis(sign_t * seed_pos_x[5 - seed_ifo.pos_index], crack_posY, 0);
+>>>>>>> Stashed changes
 				robot_ifo->chassis_state = CHASSIS_MODE_MIX_SEED;
 				robot_ifo->speed_target.target_vy_direct = -1.6;
 
@@ -151,8 +180,13 @@ void plant_task(SeedIfo_t *seed_ifo, grap_t *grap_ifo, Robotifo_t *robot_ifo)
 		case SEED_STATE_MOVE_2_PUT:
     	{
 			robot_ifo->tol_state = CHASSIS_MODE_TOL_SMALL;
+<<<<<<< Updated upstream
 		  	if((seed_ifo->run_tick >= 50 && chassis_arrive_check(robot_ifo) == true && seed_ifo->putm_count % 2 == 0) ||
 		  	   (seed_ifo->run_tick >= 50 && chassis_arrive_check(robot_ifo) == true && seed_ifo->putm_count % 2 == 1)) 
+=======
+		  	if((seed_ifo.run_tick >= 50 && robot_ifo->chassis_arrive == 1 && seed_ifo.putm_count % 2 == 0) ||
+		  	   (seed_ifo.run_tick >= 50 && robot_ifo->chassis_arrive == 1 && seed_ifo.putm_count % 2 == 1)) 
+>>>>>>> Stashed changes
 			{
 				seed_ifo->putm_count++;
 				seed_ifo->run_tick = 0;
@@ -200,7 +234,11 @@ void plant_task(SeedIfo_t *seed_ifo, grap_t *grap_ifo, Robotifo_t *robot_ifo)
     	{
 		  	if(seed_ifo->run_tick <= 120)
 			{
+<<<<<<< Updated upstream
 				seed_ifo->run_tick++;
+=======
+				seed_ifo.run_tick++;
+>>>>>>> Stashed changes
 			  	robot_ifo->chassis_state = CHASSIS_MODE_MANUAL;
 				robot_ifo->speed_target.target_vx_direct = -sign_t * 0.8;
 				robot_ifo->speed_target.target_vy_direct =  0.4;
@@ -209,8 +247,13 @@ void plant_task(SeedIfo_t *seed_ifo, grap_t *grap_ifo, Robotifo_t *robot_ifo)
 			{
 			  	if(seed_ifo->pos_index >= 6)
 				{
+<<<<<<< Updated upstream
 					seed_ifo->run_tick = 0;
 					seed_ifo->seed_state = SEED_STATE_TRANSITION_F;
+=======
+					seed_ifo.run_tick = 0;
+					seed_ifo.seed_state = SEED_STATE_TRANSITION_F;
+>>>>>>> Stashed changes
 					robot_ifo->task_type = TASK_TYPE_TRANSITION;
 					break;
 				}
@@ -231,7 +274,11 @@ void transition_task(SeedIfo_t *seed_ifo, Robotifo_t *robot_ifo)
 	{
 		static uint8_t clear_PID_flag = 1;
 	  	case SEED_STATE_TRANSITION_F:{
+<<<<<<< Updated upstream
 			if( (chassis_arrive_check(robot_ifo) == true && seed_ifo->run_tick >= 50) || seed_ifo->run_tick >= 270)
+=======
+			if( (robot_ifo->chassis_arrive == 1 && seed_ifo.run_tick >= 50) || seed_ifo.run_tick >= 270)
+>>>>>>> Stashed changes
 			{
 				seed_ifo->run_tick = 0;
 			  	seed_ifo->seed_state = SEED_STATE_TRANSITION_S;
@@ -264,7 +311,11 @@ void transition_task(SeedIfo_t *seed_ifo, Robotifo_t *robot_ifo)
 				else
 				  	grap_ifo.grap_state = GRAP_STATE_GRAP;
 
+<<<<<<< Updated upstream
 				seed_ifo->run_tick++;
+=======
+				seed_ifo.run_tick++;
+>>>>>>> Stashed changes
         		robot_ifo->chassis_state = CHASSIS_HYBRID_YS;
 				robot_ifo->speed_target.target_vy_direct = 1.9;
 				robot_ifo->pos_target.pos_z = 0;

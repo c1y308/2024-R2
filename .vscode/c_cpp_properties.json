@@ -5,7 +5,7 @@
             "includePath": [
                 "${workspaceFolder}/**", // 项目自身代码路径
                 "${workspaceFolder}/Drivers/**", // STM32标准库/HAL库头文件路径（根据你的项目调整）
-                "D:/A-StudySoft/arm-none-eabi/include/**",
+                "E:/A-StudySoft/arm-none-eabi/include/**",
                 "${workspaceFolder}/Core/**"
             ],
             "defines": [
@@ -14,7 +14,7 @@
             ],
             "cStandard": "c17",
             "cppStandard": "gnu++14",
-            "compilerPath": "D:/A-StudySoft/arm-none-eabi/bin/arm-none-eabi-gcc.exe", // 关键：指定ARM交叉编译器路径（替换为你的实际路径）
+            "compilerPath": "E:/A-StudySoft/arm-none-eabi/bin/arm-none-eabi-gcc.exe", // 关键：指定ARM交叉编译器路径（替换为你的实际路径）
             "intelliSenseMode": "gcc-arm", // 关键：适配ARM架构的智能感知模式（替代之前的windows-gcc-x86）
             "configurationProvider": "ms-vscode.makefile-tools" // 保留：让插件同步Makefile中的ARM-GCC配置
         }

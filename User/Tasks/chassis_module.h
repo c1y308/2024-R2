@@ -138,13 +138,11 @@ typedef struct
 extern int8_t sign_t;
 extern Robotifo_t robot_ifo;
 
-
-void chassis_feedback_update(void);
-void cal_chassis_speed(Robotifo_t ifo);
-void chassis_calc_tarspeed_task(void);
+void chassis_feedback_update(Robotifo_t *robot_ifo);
+void cal_chassis_speed_2_motor(Robotifo_t *robot_ifo);
 void chassis_pos_calc(Robotifo_t *chassis_auto_build);
-void input_tarspeed_chassis(float tarx,float tary,float tarz);
-void input_tarpos_chassis(float tarpx, float tarpy,float tarpz);
+void input_tarspeed_chassis(Robotifo_t *robot_ifo, float tarx, float tary, float tarz);
+void input_tarpos_chassis(Robotifo_t *robot_ifo, float tarpx, float tarpy,float tarpz);
 void stop_chassis(void);
 bool chassis_arrive_check(Robotifo_t *robot_ifo);
 void PID_init_outer();

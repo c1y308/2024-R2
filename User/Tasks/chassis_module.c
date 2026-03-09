@@ -433,6 +433,7 @@ void chassis_pos_calc(Robotifo_t *robot_ifo)
 		robot_ifo->speed_target.wz = - pid_DJI_outer[2].out;
 }
 
+
 /* 进行地盘速度环计算，得到目标电机速度 */
 void cal_chassis_speed_2_motor(Robotifo_t *robot_ifo)
 {
@@ -497,7 +498,11 @@ void Remake_Task(Robotifo_t *robot_ifo)
 	  temp_x = -0.4 * sign_t;
 		temp_y = 0;
 	}
+<<<<<<< Updated upstream
 	Input_TarSpeed_Chassis(temp_x,temp_y, 0);
+=======
+	input_tarspeed_chassis(robot_ifo, temp_x, temp_y, 0);
+>>>>>>> Stashed changes
 	if(REMAKE_TY + 320 > remake_tick && remake_tick > 300 + REMAKE_TY)
 	{
 		CD_SETX(&huart3, -(float)real_lv100);
@@ -505,7 +510,11 @@ void Remake_Task(Robotifo_t *robot_ifo)
 	if(REMAKE_TY+320 <= remake_tick)
 	{
 	  CD_SETY(&huart3,0);
+<<<<<<< Updated upstream
 		Input_TarPos_Chassis(0, robot_ifo->pos_target.pos_y, 0);
+=======
+		input_tarpos_chassis(robot_ifo, 0, robot_ifo->pos_target.pos_y, 0);
+>>>>>>> Stashed changes
 		remake_tick = 0;
 		robot_ifo->task_type = TASK_TYPE_BALL;
 	}
