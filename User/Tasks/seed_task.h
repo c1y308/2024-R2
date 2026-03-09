@@ -9,7 +9,7 @@ typedef enum
 { 
 	SEED_STATE_INIT = 1, 
 	SEED_STATE_INIT_2, // 
-	SEED_STATE_MOVE,   // 2
+	SEED_STATE_MOVE_2_GET,   // 2
 	SEED_STATE_GET,    // 3
 	SEED_STATE_MOVE_2_PUT,     // 4
 	SEED_STATE_PUT,    // 5
@@ -33,6 +33,19 @@ typedef enum{
 	CHASSIS_PARITY_ODD,    // 奇数次触发
 } ChassisParity_e;
 
+
+typedef enum{
+	PUT_MOVE_2_FRONT,  // 偶数次触发
+	PUT_MOVE_2_BACK,    // 奇数次触发
+} PutMovePos_e;
+
+
+typedef enum{
+	PUT_ODD,
+	PUT_EVEN,
+} PutParity_e;
+
+
 typedef struct
 {
 	SeedState_e seed_state;
@@ -51,9 +64,9 @@ typedef struct
 
 extern SeedIfo_t seed_ifo;
 
-void seedtask_init(void);
+void seedtask_init(SeedIfo_t *seed_ifo);
+void plant_task(SeedIfo_t *seed_ifo, grap_t *grap_ifo, Robotifo_t *robot_ifo);
 void transition_task(void);
-void plant_task(grap_t *grap_ifo);
 
 void GP_Task_Single(void);
 void Ball_Task_Single(void);

@@ -324,7 +324,7 @@ void chassis_calc_tarspeed_task(Robotifo_t *robot_ifo)
 		{
 			chassis_pos_calc(&robot_ifo);
 			// 此处可以进行优化，进行解耦，当接近目标点时，单独进行一个减速的函数，或者在位置环中加入一个根据误差自动调整输出的函数 
-			if(fabs(robot_ifo->pos_error.ErrorposY) < LOW_DES_COM && seed_ifo.seed_state == SEED_STATE_MOVE)  // &&seed_ifo.cnm == 0
+			if(fabs(robot_ifo->pos_error.ErrorposY) < LOW_DES_COM && seed_ifo.seed_state == SEED_STATE_MOVE_2_GET)  // &&seed_ifo.cnm == 0
 			{
 				 vy_limit = vy_limit - 1.45;
 				 if(vy_limit <= LOW_SPEED)
@@ -498,11 +498,11 @@ void Remake_Task(Robotifo_t *robot_ifo)
 	  temp_x = -0.4 * sign_t;
 		temp_y = 0;
 	}
-<<<<<<< Updated upstream
+
 	Input_TarSpeed_Chassis(temp_x,temp_y, 0);
-=======
+
 	input_tarspeed_chassis(robot_ifo, temp_x, temp_y, 0);
->>>>>>> Stashed changes
+
 	if(REMAKE_TY + 320 > remake_tick && remake_tick > 300 + REMAKE_TY)
 	{
 		CD_SETX(&huart3, -(float)real_lv100);
@@ -510,11 +510,10 @@ void Remake_Task(Robotifo_t *robot_ifo)
 	if(REMAKE_TY+320 <= remake_tick)
 	{
 	  CD_SETY(&huart3,0);
-<<<<<<< Updated upstream
+
 		Input_TarPos_Chassis(0, robot_ifo->pos_target.pos_y, 0);
-=======
+
 		input_tarpos_chassis(robot_ifo, 0, robot_ifo->pos_target.pos_y, 0);
->>>>>>> Stashed changes
 		remake_tick = 0;
 		robot_ifo->task_type = TASK_TYPE_BALL;
 	}

@@ -60,6 +60,7 @@ void grap_motor_init(void);
 void grap_init(grap_t *grap_ifo);
 void grap_seed(grap_t *grap_ifo);
 void grap_seed(grap_t *grap_ifo);
+void preput_seed(grap_t *grap_ifo);
 void put_seed(grap_t *grap_ifo);
 
 

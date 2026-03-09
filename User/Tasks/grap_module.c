@@ -131,9 +131,15 @@ void grap_seed(grap_t *grap_ifo){
 }
 
 
+void preput_seed(grap_t *grap_ifo){
+	grap_ifo->grap_state = GRAP_STATE_PRE_PUT;
+}
+
+
 void put_seed(grap_t *grap_ifo){
 	grap_ifo->grap_state = GRAP_STATE_WAIT_AND_PUT;
 }
+
 
 void grap_task(grap_t *grap_ifo){
 	switch (grap_ifo->grap_state)
@@ -354,13 +360,11 @@ void grap_task(grap_t *grap_ifo){
 				}
                 grap_ifo->grap_state = GRAP_STATE_WAIT_AND_PUT;
                 grap_ifo->grap_last_state = GRAP_STATE_PRE_PUT;
-				input_tarpos_chassis(sign_t * put_pos_x[seed_ifo.pos_index - 2], put_pos_y[0], 0);
 			}
 			else  // 抓取存储在车上的苗并预放高度
 			{
 				grap_ifo->grap_state = GRAP_STATE_PUT_ROTATE;
                 grap_ifo->grap_last_state = GRAP_STATE_PRE_PUT;
-				input_tarpos_chassis(sign_t * put_pos_x[seed_ifo.pos_index - 2], put_pos_y[1], 0);
 			}
 		}
 
