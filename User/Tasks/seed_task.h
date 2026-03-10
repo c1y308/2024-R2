@@ -2,23 +2,19 @@
 #define SEED_TASK_H
 #include "main.h"
 #include "chassis_module.h"
+#include "grap_module.h"
 #include "dji_motor.h"
 #include "can_trx.h"
-#include "grap_module.h"
+#include "trans_task.h"
 typedef enum 
 { 
 	SEED_STATE_INIT = 1, 
-	SEED_STATE_INIT_2, // 
-	SEED_STATE_MOVE_2_GET,   // 2
-	SEED_STATE_GET,    // 3
-	SEED_STATE_MOVE_2_PUT,     // 4
-	SEED_STATE_PUT,    // 5
-	SEED_STATE_CORRECT,// 6
-	
-	SEED_STATE_TRANSITION_F,// 7
-	SEED_STATE_TRANSITION_S,// 8
-	SEED_STATE_TRANSITION_T,// 9
-	SEED_STATE_TRANSITION_4,// 10
+	SEED_STATE_INIT_2,
+	SEED_STATE_MOVE_2_GET,
+	SEED_STATE_GET,
+	SEED_STATE_MOVE_2_PUT,
+	SEED_STATE_PUT,
+	SEED_STATE_CORRECT,
 } SeedState_e;
 
 
@@ -66,7 +62,6 @@ extern SeedIfo_t seed_ifo;
 
 void seedtask_init(SeedIfo_t *seed_ifo);
 void plant_task(SeedIfo_t *seed_ifo, grap_t *grap_ifo, Robotifo_t *robot_ifo);
-void transition_task(void);
 
 void GP_Task_Single(void);
 void Ball_Task_Single(void);

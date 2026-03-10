@@ -1,6 +1,6 @@
 #include "user_lib.h"
 #include "main.h"
-#include "chassis_task.h"
+#include "chassis_module.h"
 first_order_filter_type_t filter_chassis_vx;
 first_order_filter_type_t filter_chassis_vy;
 first_order_filter_type_t filter_chassis_vz;
@@ -9,7 +9,7 @@ first_order_filter_type_t filter_launch_m2006_v;
 
 ramp_function_source_t filter_speed_limit_vx;
 ramp_function_source_t filter_speed_limit_vy;
-//¿ìËÙ¿ª·½
+//Ù¿
 float invSqrt(float num)
 {
     float halfnum = 0.5f * num;
@@ -22,13 +22,13 @@ float invSqrt(float num)
 }
 
 /**
-  * @brief          Ð±²¨º¯Êý³õÊ¼»¯
+  * @brief          Ð±Ê¼
   * @author         RM
-  * @param[in]      Ð±²¨º¯Êý½á¹¹Ìå
-  * @param[in]      ¼ä¸ôµÄÊ±¼ä£¬µ¥Î» s
-  * @param[in]      ×î´óÖµ
-  * @param[in]      ×îÐ¡Öµ
-  * @retval         ·µ»Ø¿Õ
+  * @param[in]      Ð±á¹¹
+  * @param[in]      Ê±ä£¬Î» s
+  * @param[in]      Öµ
+  * @param[in]      Ð¡Öµ
+  * @retval         Ø¿
   */
 void ramp_init(ramp_function_source_t *ramp_source_type, float frame_period, float max, float min)
 {
@@ -40,12 +40,12 @@ void ramp_init(ramp_function_source_t *ramp_source_type, float frame_period, flo
 }
 
 /**
-  * @brief          Ð±²¨º¯Êý¼ÆËã£¬¸ù¾ÝÊäÈëµÄÖµ½øÐÐµþ¼Ó£¬ ÊäÈëµ¥Î»Îª /s ¼´Ò»ÃëºóÔö¼ÓÊäÈëµÄÖµ
+  * @brief          Ð±ã£¬ÖµÐµÓ£ ëµ¥Î»Îª /s Ò»Öµ
   * @author         RM
-  * @param[in]      Ð±²¨º¯Êý½á¹¹Ìå
-  * @param[in]      ÊäÈëÖµ
-  * @param[in]      ÂË²¨²ÎÊý
-  * @retval         ·µ»Ø¿Õ
+  * @param[in]      Ð±á¹¹
+  * @param[in]      Öµ
+  * @param[in]      Ë²
+  * @retval         Ø¿
   */
 void ramp_calc(ramp_function_source_t *ramp_source_type, float input)
 {
@@ -61,12 +61,12 @@ void ramp_calc(ramp_function_source_t *ramp_source_type, float input)
     }
 }
 /**
-  * @brief          Ò»½×µÍÍ¨ÂË²¨³õÊ¼»¯
+  * @brief          Ò»×µÍ¨Ë²Ê¼
   * @author         RM
-  * @param[in]      Ò»½×µÍÍ¨ÂË²¨½á¹¹Ìå
-  * @param[in]      ¼ä¸ôµÄÊ±¼ä£¬µ¥Î» s
-  * @param[in]      ÂË²¨²ÎÊý
-  * @retval         ·µ»Ø¿Õ
+  * @param[in]      Ò»×µÍ¨Ë²á¹¹
+  * @param[in]      Ê±ä£¬Î» s
+  * @param[in]      Ë²
+  * @retval         Ø¿
   */
 void first_order_filter_init(first_order_filter_type_t *first_order_filter_type, float frame_period, const float num)
 {
@@ -77,11 +77,11 @@ void first_order_filter_init(first_order_filter_type_t *first_order_filter_type,
 }
 
 /**
-  * @brief          Ò»½×µÍÍ¨ÂË²¨¼ÆËã
+  * @brief          Ò»×µÍ¨Ë²
   * @author         RM
-  * @param[in]      Ò»½×µÍÍ¨ÂË²¨½á¹¹Ìå
-  * @param[in]      ¼ä¸ôµÄÊ±¼ä£¬µ¥Î» s
-  * @retval         ·µ»Ø¿Õ
+  * @param[in]      Ò»×µÍ¨Ë²á¹¹
+  * @param[in]      Ê±ä£¬Î» s
+  * @retval         Ø¿
   */
 void first_order_filter_cali(first_order_filter_type_t *first_order_filter_type, float input)
 {
@@ -90,7 +90,7 @@ void first_order_filter_cali(first_order_filter_type_t *first_order_filter_type,
     first_order_filter_type->num[0] / (first_order_filter_type->num[0] + first_order_filter_type->frame_period) * first_order_filter_type->out + first_order_filter_type->frame_period / (first_order_filter_type->num[0] + first_order_filter_type->frame_period) * first_order_filter_type->input;
 }
 
-//¾ø¶ÔÏÞÖÆ
+//
 void abs_limit(float *num, float Limit)
 {
     if (*num > Limit)
@@ -103,7 +103,7 @@ void abs_limit(float *num, float Limit)
     }
 }
 
-//ÅÐ¶Ï·ûºÅÎ»
+//Ð¶Ï·Î»
 int8_t sign(float value)
 {
     if (value >= 0.0f)
@@ -122,7 +122,7 @@ float rc_dead_band_limit(float input, float dead_line)       \
     else                                                     \
         return 0;                                            \
 }
-//¸¡µãËÀÇø
+//
 float float_deadline(float Value, float minValue, float maxValue)
 {
     if (Value < maxValue && Value > minValue)
@@ -132,7 +132,7 @@ float float_deadline(float Value, float minValue, float maxValue)
     return Value;
 }
 
-//int26ËÀÇø
+//int26
 int16_t int16_deadline(int16_t Value, int16_t minValue, int16_t maxValue)
 {
     if (Value < maxValue && Value > minValue)
@@ -142,7 +142,7 @@ int16_t int16_deadline(int16_t Value, int16_t minValue, int16_t maxValue)
     return Value;
 }
 
-//ÏÞ·ùº¯Êý
+//Þ·
 float float_constrain(float Value, float minValue, float maxValue)
 {
     if (Value < minValue)
@@ -153,7 +153,7 @@ float float_constrain(float Value, float minValue, float maxValue)
         return Value;
 }
 
-//ÏÞ·ùº¯Êý
+//Þ·
 int16_t int16_constrain(int16_t Value, int16_t minValue, int16_t maxValue)
 {
     if (Value < minValue)
@@ -164,7 +164,7 @@ int16_t int16_constrain(int16_t Value, int16_t minValue, int16_t maxValue)
         return Value;
 }
 
-//Ñ­»·ÏÞ·ùº¯Êý
+//Ñ­Þ·
 float loop_float_constrain(float Input, float minValue, float maxValue)
 {
     if (maxValue < minValue)
@@ -191,9 +191,9 @@ float loop_float_constrain(float Input, float minValue, float maxValue)
     return Input;
 }
 
-//»¡¶È¸ñÊ½»¯Îª-PI~PI
+//È¸Ê½Îª-PI~PI
 
-//½Ç¶È¸ñÊ½»¯Îª-180~180
+//Ç¶È¸Ê½Îª-180~180
 float theta_format(float Ang)
 {
     return loop_float_constrain(Ang, -180.0f, 180.0f);

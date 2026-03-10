@@ -4,13 +4,6 @@ grap_t grap_ifo;
 
 
 DjiMotorHandle_t *motor_yaw_left, *motor_yaw_right, *motor_lift_left, *motor_lift_right, *motor_grap_left, *motor_grap_right;
-
-
-bool check_grap_arrive(grap_t *grap_ifo){
-	return grap_ifo->grap_arrive == 1;
-}
-
-
 void grap_motor_init()
 {
     MotorInitConfig_t chassis_motor_config = {
@@ -57,6 +50,11 @@ void grap_motor_init()
 }
 
 
+bool check_grap_arrive(grap_t *grap_ifo){
+	return grap_ifo->grap_arrive == 1;
+}
+
+
 void grap_init(grap_t *grap_ifo)
 {   
     grap_ifo->grap_state = GARP_STATE_INIT;
@@ -96,7 +94,7 @@ void grap_init(grap_t *grap_ifo)
 
 
 /*  设置所有抓取电机速度为0 */
-static void set_grap_motor_zero_speed()
+void set_grap_motor_zero_speed()
 {
 	static uint8_t clear_pid_flag = 1;
 	if(clear_pid_flag == 1)

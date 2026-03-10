@@ -22,7 +22,7 @@
 #include "stm32f4xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "chassis_task.h"
+#include "chassis_module.h"
 #include "vofa_setting.h"
 #include "vofa.h"
 #include "uart_dma.h"
@@ -499,7 +499,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 					break;
 				};
 				case manual_type:{
-					Input_TarSpeed_Chassis(manual_vx,manual_vy,manual_wz);
+					input_taspeed_chassis(manual_vx,manual_vy,manual_wz);
 					break;
 				}
 				

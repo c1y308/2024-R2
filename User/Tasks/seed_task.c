@@ -54,7 +54,7 @@ void seedtask_init(SeedIfo_t *seed_ifo)
 }
 
 /* 调用地盘module 和 爪子module 的相关API 来完成种植任务，主要进行逻辑实现 */
-void plant_task(SeedIfo_t *seed_ifo, grap_t *grap_ifo, Robotifo_t *robot_ifo)
+void plant_task(SeedIfo_t *seed_ifo, grap_t *grap_ifo, Robotifo_t *robot_ifo, TransIfo_t *trans_ifo)
 {
   	switch(seed_ifo->seed_state)
 	{
@@ -161,7 +161,7 @@ void plant_task(SeedIfo_t *seed_ifo, grap_t *grap_ifo, Robotifo_t *robot_ifo)
 					reset_ops9_y = 0;
 				}
 
-				stop_chassis();
+				stop_chassis(robot_ifo);
 				seed_ifo->run_tick++;
 			}
 			break;
@@ -213,7 +213,7 @@ void plant_task(SeedIfo_t *seed_ifo, grap_t *grap_ifo, Robotifo_t *robot_ifo)
 			else
 			{
 				put_seed(grap_ifo);
-        		stop_chassis();
+        		stop_chassis(robot_ifo);
 				seed_ifo->run_tick++;
 			}
 			break;
@@ -233,8 +233,7 @@ void plant_task(SeedIfo_t *seed_ifo, grap_t *grap_ifo, Robotifo_t *robot_ifo)
 			  	if(seed_ifo->pos_index >= 6)
 				{
 					seed_ifo->run_tick = 0;
-					seed_ifo->seed_state = SEED_STATE_TRANSITION_F;
-					robot_ifo->task_type = TASK_TYPE_TRANSITION;
+					start_transition_task(robot_ifo, trans_ifo);
 					break;
 				}
 				else
@@ -244,99 +243,6 @@ void plant_task(SeedIfo_t *seed_ifo, grap_t *grap_ifo, Robotifo_t *robot_ifo)
 		}
 		default:
 			break;
-	}
-}
-
-
-void transition_task(SeedIfo_t *seed_ifo, Robotifo_t *robot_ifo)
-{
-  switch(seed_ifo->seed_state)
-	{
-		static uint8_t clear_PID_flag = 1;
-	  	case SEED_STATE_TRANSITION_F:{
-			if( (chassis_arrive_check(robot_ifo) == true && seed_ifo->run_tick >= 50) || seed_ifo->run_tick >= 270)
-			{
-				seed_ifo->run_tick = 0;
-			  	seed_ifo->seed_state = SEED_STATE_TRANSITION_S;
-			}
-			else
-			{
-				if(clear_PID_flag == 1)
-				{
-					for(int i = 0; i<2; i++)
-					{
-						PID_Init(&pid_DJI_outer[i], PID_POSITION, DJI_pos_outer_para, RUN_S, M3508_MOTOR_POSITION_PID_IOUT_LIMIT);
-					} 
-					clear_PID_flag = 0;
-				}
-				seed_ifo->run_tick++;
-				input_tarpos_chassis(sign_t * -790, 1800, 0);
-			}
-			break;
-		}
-		case SEED_STATE_TRANSITION_S:{  
-		  if(seed_ifo->run_tick >= TRANS_TICK_S)
-			{
-				seed_ifo->run_tick = 0;
-			  	seed_ifo->seed_state = SEED_STATE_TRANSITION_T;
-			}
-			else
-			{
-				if(robot_ifo->blue_single_flag == 0 && robot_ifo->red_single_flag == 0)
-				  	grap_ifo.grap_state = GRAP_STATE_PUT_ROTATE; 
-				else
-				  	grap_ifo.grap_state = GRAP_STATE_GRAP;
-
-				seed_ifo->run_tick++;
-        		robot_ifo->chassis_state = CHASSIS_HYBRID_YS;
-				robot_ifo->speed_target.target_vy_direct = 1.9;
-				robot_ifo->pos_target.pos_z = 0;
-			}
-			break;
-		}
-
-		case SEED_STATE_TRANSITION_T:{
-			if(seed_ifo->run_tick >= CRACK_SECOND_TICK)
-			{
-				CD_SETY(&huart3, 0);
-				seed_ifo->seed_state = SEED_STATE_TRANSITION_4;
-			  	seed_ifo->run_tick = 0;
-			}
-			else
-			{
-				for(uint8_t i = 0; i<8; i++)
-				{
-					DJI_motor_CAN2[i].target_speed = 0;
-				  PID_clear(&pid_DJI_motor_CAN2[i]);
-				}
-				magnet_control();
-				seed_ifo->run_tick++;
-				Input_TarSpeed_Chassis(-1 * sign_t  *CRACK_SPEED_SECOND, 0, 0);
-			}
-			break;
-		}
-		case SEED_STATE_TRANSITION_4:{//
-			static int32_t lv_100_total = 0;
-			if(seed_ifo->run_tick < 100)
-			  	lv_100_total += real_lv100;
-
-			seed_ifo->run_tick++;
-
-			if(seed_ifo->run_tick >= 100)
-			{
-				CD_SETX(&huart3, -(float) (lv_100_total / 100));
-				CD_SETZ(&huart3, 0);
-				input_tarpos_chassis(robot_ifo, robot_ifo->pos_now.pos_x, real_lv100, robot_ifo->pos_now.pos_z);
-				
-				if(robot_ifo->blue_single_flag == 1 || robot_ifo->red_single_flag == 1)
-				  	robot_ifo->task_type = TASK_TYPE_SINGLE_BALL;
-				else
-					robot_ifo->task_type = TASK_TYPE_BALL;
-			}
-			stop_chassis();
-			break;
-		}
-		default:break;
 	}
 }
 

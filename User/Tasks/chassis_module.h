@@ -143,9 +143,10 @@ void cal_chassis_speed_2_motor(Robotifo_t *robot_ifo);
 void chassis_pos_calc(Robotifo_t *chassis_auto_build);
 void input_tarspeed_chassis(Robotifo_t *robot_ifo, float tarx, float tary, float tarz);
 void input_tarpos_chassis(Robotifo_t *robot_ifo, float tarpx, float tarpy,float tarpz);
-void stop_chassis(void);
+void stop_chassis(Robotifo_t *robot_ifo);
 bool chassis_arrive_check(Robotifo_t *robot_ifo);
-void PID_init_outer();
+
+void chassis_PID_init_outer(void);
 
 extern float controller_vx;
 extern float controller_vy;

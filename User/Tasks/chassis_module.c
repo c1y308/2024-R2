@@ -42,9 +42,9 @@ PIDInitConfig_t chassis_pos_para_w = {
 
 PID_t pid_DJI_outer[3];  // x，y，z speed as outer loop
 /**************************初始化PID结构体****************************/
-void PID_init_outer()
+void chassis_PID_init_outer()
 {
-	 for(int i = 0;i < 2; i++)//分别为XY位置外环，求解得到地盘目标速度
+	 for(int i = 0; i < 2; i++)//分别为XY位置外环，求解得到地盘目标速度
 	 {
 	    PID_init(&pid_DJI_outer[i], chassis_pos_para);
 	 }
@@ -498,8 +498,6 @@ void Remake_Task(Robotifo_t *robot_ifo)
 	  temp_x = -0.4 * sign_t;
 		temp_y = 0;
 	}
-
-	Input_TarSpeed_Chassis(temp_x,temp_y, 0);
 
 	input_tarspeed_chassis(robot_ifo, temp_x, temp_y, 0);
 

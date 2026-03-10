@@ -3,7 +3,7 @@
 #include "stdio.h"
 
 
-void LimitMax(PID_t *pid)   	
+void PID_limit_maxout(PID_t *pid)   	
 {                        				
 	if (pid->Iout > pid->max_iout)       				
   {                      			

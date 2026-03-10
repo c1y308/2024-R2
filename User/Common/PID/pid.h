@@ -57,10 +57,7 @@ typedef struct
 
 PID_t pid_DJI_outer[3];//分别为x，y，z速度
 
-void PID_init_outer(void);
-
-
-void  LimitMax(PID_t *pid);
+void  PID_limit_maxout(PID_t *pid);
 void  PID_init(PID_t *pid, PIDInitConfig_t config);
 void  PID_clear(PID_t *pid);
 float PID_calc(PID_t *pid,float ref,float target);
