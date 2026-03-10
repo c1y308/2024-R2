@@ -4,8 +4,6 @@
 #include "launch_module.h"
 #include "chassis_module.h"
 
-extern int8_t ball_temp[3];
-
 
 typedef enum{
     SWITCH_POS_ACT_L = 0x00,
@@ -30,7 +28,7 @@ typedef struct
 	uint8_t protect_flag_2;
 	
 	uint8_t protect_flag;
-  	uint8_t special_flag;
+  	uint8_t special_switch;
   	uint8_t confirm_flag;
 	uint8_t ball_confirm;
 
@@ -52,17 +50,17 @@ typedef struct
 typedef enum
 {
     BALL_STATE_IDLE  = 0x00,
-    BALL_STATE_CHECK = 0x01,
+    BALL_STATE_START_LAUNCH = 0x01,
     BALL_STATE_LINE_CHANGE_F,
     BALL_STATE_LINE_CHANGE_S,
     
     BALL_STATE_GET_BALL_POS_SPECIAL_F,
     BALL_STATE_GET_BALL_POS_SPECIAL_B,
     
-    BALL_STATE_GET_BALL_POS_F,
-    BALL_STATE_GET_BALL_POS_S,
-    BALL_STATE_GET_BALL_POS_T,
-    BALL_STATE_BALL_ACTION,
+    BALL_STATE_MOVE_TO_BALL_POS,
+    BALL_STATE_GET_BALL_ACTION,
+    BALL_STATE_READY_TO_LAUNCH,
+    BALL_STATE_LAUNCH_ACTION,
     BALL_STATE_ANGLE_CORRECT,
     
     BALL_STATE_LINE_CHANGE_SINGLE_1,

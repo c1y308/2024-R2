@@ -384,36 +384,32 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 					else if (rx_buf[1] ==0xA6){
 						switch(rx_buf[2]){
 							case 0x10:{
-							//����1
 								all_ifo.sssstar = 1;
 								break;
 							}
 							case 0x11:{
-							//����2
 								ball_ifo.ball_confirm = ball_ifo.ball_confirm++;
 								break;
 							}
 							case 0x20:{
-								//����3
 								all_ifo.stop_flag=1;
 								break;
 							}
 							case 0x21:{
-								//����4
 								all_ifo.sssstar = 1;
 								all_ifo.stop_flag=0;
 								all_ifo.sac = 0;
 								all_ifo.task_type = manual_type;
 								break;
 							}
-							case 0x30:{//����������
+							case 0x30:{
 								all_ifo.stop_flag=0;
 								all_ifo.task_type = single_type;
 							  all_ifo.red_single_flag = 1;
 								all_ifo.sssstar = 1;
 								break;
 							}
-							case 0x31:{//����������
+							case 0x31:{
 								all_ifo.stop_flag=0;
 								all_ifo.task_type = single_type;
 							  all_ifo.blue_single_flag = 1;
@@ -434,13 +430,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 						if(area == 1&&area_flag == 0) 
 						{
 							sign_t = 1;
-							tx_back_buf[1]=1;//���� ��
+							tx_back_buf[1]=1;
 							nRF24L01_Rx_AckPayload(tx_back_buf,1);
 						}
 						else if(area == 2&&area_flag == 0) 
 						{
 							sign_t = -1;
-							tx_back_buf[1]=2;//���� ��
+							tx_back_buf[1]=2;
 							nRF24L01_Rx_AckPayload(tx_back_buf,1);
 						}
 						//if(rx_buf[2] == 2) area_flag = 1;
