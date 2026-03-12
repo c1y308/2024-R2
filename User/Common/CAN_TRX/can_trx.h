@@ -50,6 +50,6 @@ void CAN_Cmd_Gimbal(int16_t S1,int16_t S2,int16_t S3,int16_t S4);
 void CAN_Cmd_Chassis_CAN2(int16_t S1,int16_t S2,int16_t S3,int16_t S4);
 void CAN_Cmd_Gimbal_CAN2(int16_t S1,int16_t S2,int16_t S3,int16_t S4);
 
-void Set_PWM_Motor_Speed(CAN_HandleTypeDef *hcan, uint16_t speed1, uint16_t speed2, uint16_t speed3, uint16_t speed4);
+void set_pwm_motor_speed(CAN_HandleTypeDef *hcan, uint16_t speed1, uint16_t speed2, uint16_t speed3, uint16_t speed4);
 
 #endif

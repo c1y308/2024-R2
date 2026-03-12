@@ -142,7 +142,7 @@ uint8_t CANTransmit(UserCANHandle_t *_instance, float timeout)
 }
 
 
-void Set_PWM_Motor_Speed(CAN_HandleTypeDef *hcan, uint16_t speed1, uint16_t speed2, uint16_t speed3, uint16_t speed4)
+void set_pwm_motor_speed(CAN_HandleTypeDef *hcan, uint16_t speed1, uint16_t speed2, uint16_t speed3, uint16_t speed4)
 {
     CAN_TxHeaderTypeDef  ZDY_tx_message;    //CAN
     uint8_t              can_send_data[8];  //

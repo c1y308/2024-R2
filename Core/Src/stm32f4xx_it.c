@@ -31,9 +31,6 @@
 #include "seed_task.h"
 #include "Code_Disc.h"
 #include "NRF24L01.h"
-#include "ball_task.h"
-#include "grapping.h"
-#include "single_task.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/

@@ -3,7 +3,7 @@
 
 #include "launch_module.h"
 #include "chassis_module.h"
-
+#include <stdbool.h>
 
 typedef enum{
     SWITCH_POS_ACT_L = 0x00,
@@ -16,21 +16,24 @@ typedef enum{
     SWITCH_POS_ACT_F = 0x01,
 }SwitchPosActFB_e;
 
+
 typedef enum{
     FIRST_LINE = 0x00,
     SECOND_LINE = 0x01,
 }LineState_e;
 
+typedef enum{
+    LAUNCH_CONFIRM_WAIT = 0x00,
+    LAUNCH_CONFIRM_READY = 0x01,
+}LaunchConfirm_e;
+
 typedef struct
 {
 	BALLState_e current_state;
-	uint8_t disable_rotation_flag;
-	uint8_t protect_flag_2;
+	bool disable_rotation_flag;
 	
-	uint8_t protect_flag;
-  	uint8_t special_switch;
-  	uint8_t confirm_flag;
-	uint8_t ball_confirm;
+  	bool special_switch;
+	LaunchConfirm_e confirm_2_launch;
 
     uint8_t current_ball;
     uint8_t last_ball;

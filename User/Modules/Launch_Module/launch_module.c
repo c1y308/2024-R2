@@ -1,6 +1,5 @@
 #include "launch_module.h"
 #include "stdlib.h"
-#include "can.h"
 #include "user_config.h"
 
 DjiMotorHandle_t *motor2006_front, *motor2006_back, *motor3508_lift;
@@ -44,6 +43,12 @@ void launch_motor_speed_normal(){
 	dji_motor_setref(motor2006_front, M2006_GET_BALL_SPEED);
 	dji_motor_setref(motor2006_back,  M2006_GET_BALL_SPEED);
 	dji_motor_setref(motor3508_lift, 0);
+}
+
+
+void launch_motor_speed_change(uint16_t storm_motor_speed){
+	dji_motor_setref(motor3508_lift, -0.9);
+	set_pwm_motor_speed(&hcan1, storm_motor_speed, 0, 0, 0);
 }
 
 

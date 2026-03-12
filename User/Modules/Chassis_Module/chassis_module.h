@@ -123,7 +123,7 @@ typedef struct
 	PosError_t  pos_error;
 
 	SpeedTarget_t speed_target;
-	SpeedNow_t speed_now;
+	SpeedNow_t 	  speed_now;
 	
 	int16_t init_tick;
 	
