@@ -455,15 +455,15 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			}
 			switch(all_ifo.task_type)
 			{
-				case get_seed_type:{//ȡ������
+				case get_seed_type:{
 					GP_Task_Ultra();
 					break;
 				}
-				case transition:{//��ȡ����ɣ���б�£��������̣�
+				case transition:{
 					Transition_Task();
 					break;
 				}
-				case ball_type:{//ȡ��������
+				case ball_type:{
 					Ball_Task_Ultra();
 					break;
 				}
@@ -476,14 +476,14 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 //					Input_TarSpeed_Chassis(0,0,0);
 				  break;
 				}
-				case grap_test_type:{//������
+				case grap_test_type:{
 					if(grap_ifo.test_semophare%2 == 0)
 				    Grap_Storage();
 					else
 				    Out_Storage();				
 					break;
 				}
-				case single_type:{//������
+				case single_type:{
 				  GP_Task_Single();
 					break;
 				}

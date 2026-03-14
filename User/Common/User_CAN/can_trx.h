@@ -1,6 +1,5 @@
 #ifndef CAN_TRX_H
 #define CAN_TRX_H
-#include "main.h"
 #include "can.h"
 //#define CONTROL_VALUE_2_VECTOR 0.00514f
 //#define TEST_MODE 1
@@ -35,11 +34,6 @@ typedef struct
     CAN_HandleTypeDef *can_handle;
 } CANInitConfig_t;
 
-
-extern int16_t send_current[8];
-extern int16_t send_current_CAN2[8];
-extern int16_t sbus_channel[16];
-extern uint16_t PWM_speed[3];
 
 UserCANHandle_t *CAN_register(CANInitConfig_t *config);
 

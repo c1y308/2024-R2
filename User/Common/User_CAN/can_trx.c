@@ -1,11 +1,5 @@
-#include "chassis_task.h"
 #include "can_trx.h"
 
-
-static int16_t send_current[8];
-static int16_t send_current_CAN2[8];
-static int16_t sbus_channel[16];
-static uint16_t PWM_speed[3];
 
 static UserCANHandle_t *can_instance[CAN_MAX_REGISTER_CNT] = {NULL};
 static uint8_t idx;
@@ -40,10 +34,10 @@ UserCANHandle_t *CAN_register(CANInitConfig_t *config)
 {
     if (idx == 0)
     {
-        CANServiceInit(); // ,
+        CANServiceInit();
         LOGINFO("[bsp_can] CAN Service Init");
     }
-    if (idx >= CAN_MAX_REGISTER_CNT) // 
+    if (idx >= CAN_MAX_REGISTER_CNT)
     {
         while (1)
             LOGERROR("[bsp_can] CAN instance exceeded MAX num, consider balance the load of CAN bus");
@@ -57,23 +51,22 @@ UserCANHandle_t *CAN_register(CANInitConfig_t *config)
         }
     }
     
-    UserCANHandle_t *instance = (UserCANHandle_t *)malloc( sizeof(UserCANHandle_t) ); // 
-    memset(instance, 0, sizeof(UserCANHandle_t));                                     // 0,
+    UserCANHandle_t *instance = (UserCANHandle_t *)malloc( sizeof(UserCANHandle_t) );
+    memset(instance, 0, sizeof(UserCANHandle_t));
 
-    // 
     instance->txconf.StdId = config->tx_id; // id
     instance->txconf.IDE = CAN_ID_STD;      // id,idCAN_ID_EXT()
     instance->txconf.RTR = CAN_RTR_DATA;    // 
     instance->txconf.DLC = 0x08;            // 8
 
-    // canid
+
     instance->can_handle = config->can_handle;
     instance->tx_id = config->tx_id;  // txconf
     instance->rx_id = config->rx_id;
     instance->can_module_callback = config->can_module_callback;
     instance->id = config->id;  // DJIMotor_t
 
-    CANAddFilter(instance);         // CAN
+    CANAddFilter(instance);
     can_instance[idx++] = instance; 
 
     return instance;
@@ -97,18 +90,18 @@ static void CANFIFOxCallback(CAN_HandleTypeDef *_hcan, uint32_t fifox)
 {
     static CAN_RxHeaderTypeDef rxconf;
     uint8_t can_rx_buff[8];
-    while (HAL_CAN_GetRxFifoFillLevel(_hcan, fifox)) // FIFO,
+    while (HAL_CAN_GetRxFifoFillLevel(_hcan, fifox))
     {
-        HAL_CAN_GetRxMessage(_hcan, fifox, &rxconf, can_rx_buff); // FIFO
+        HAL_CAN_GetRxMessage(_hcan, fifox, &rxconf, can_rx_buff);
         for (size_t i = 0; i < idx; i++)
         {   // StdID
             if (_hcan == can_instance[i]->can_handle && rxconf.StdId == can_instance[i]->rx_id)
             {
-                if (can_instance[i]->can_module_callback != NULL) // 
+                if (can_instance[i]->can_module_callback != NULL)
                 {
-                    can_instance[i]->rx_len = rxconf.DLC;                      // 
-                    memcpy(can_instance[i]->rx_buff, can_rx_buff, rxconf.DLC); // 
-                    can_instance[i]->can_module_callback(can_instance[i]);     // 
+                    can_instance[i]->rx_len = rxconf.DLC; 
+                    memcpy(can_instance[i]->rx_buff, can_rx_buff, rxconf.DLC); 
+                    can_instance[i]->can_module_callback(can_instance[i]); 
                 }
                 return;
             }

@@ -1,7 +1,6 @@
 #ifndef DJI_MOTOR_H
 #define DJI_MOTOR_H
 
-#include "main.h"
 #include "motor_def.h"
 
 

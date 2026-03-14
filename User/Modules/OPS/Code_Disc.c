@@ -1,8 +1,6 @@
-#include "main.h"
 #include "Code_Disc.h"
 #include "string.h"
 #include "math.h"
-#include "chassis_task.h"
 
 // Code_Disc_measer Code_Disc;
 // Code_Disc_robot_measer Code_Disc_robot;
@@ -76,43 +74,6 @@ void process_packet(const uint8_t *packet_data)
     // 坐标转换
     code_disc_coodinate2robot_coodinate(&Code_Disc_robot, Code_Disc);
 }
-
-
-// /**
-//   * @brief          解码函数->放入接收数据解码函数中
-//   * @param[in]      数组指针
-//   * @retval         none
-//   */
-// void CD_get_measer(uint8_t *pdata, uint8_t length)
-// {
-//   static float last_yaw = 0;
-//   last_yaw = code_disc.measer.yaw;
-  
-
-//   if(pdata[0] == 0x0D && pdata[1] == 0x0A && pdata[26] == 0x0A && pdata[27] == 0x0D)
-//   {
-//       memcpy(&code_disc.measer, &pdata[2], 24);
-//       code_disc.ok++;
-//       if((last_yaw - code_disc.measer.yaw) >= 180)
-//       {
-//         code_disc.measer.yaw = 360 + code_disc.measer.yaw;
-//       }
-//       else if((last_yaw - code_disc.measer.yaw) < -180)
-//       {
-//         code_disc.measer.yaw =-(360 - code_disc.measer.yaw);
-//       }
-//         code_disc_coodinate2robot_coodinate(&code_disc.robot_measer, code_disc.measer);
-//   }
-//   else
-//   {
-//       code_disc.err ++;
-//   }
-// //  /*********************坐标转换*****************/
-// //  float temp_x = Code_Disc.x, temp_y = Code_Disc.y;
-// //  Code_Disc.x = -(temp_x*0.707f - temp_y*0.707f);
-// //  Code_Disc.y = -(temp_x*0.707f + temp_y*0.707f);
-// //  /*********************坐标转换*****************/
-// }
 
 
 /**

@@ -1,7 +1,6 @@
 #ifndef __CODE_DISC_H__
 #define __CODE_DISC_H__
 
-#include "main.h"
 #include "ring_buffer.h"
 // #define Code_Disc_on   //表示有码盘
 #define Code_Disc_Offset//码盘安装位置不处于中心点
@@ -55,6 +54,7 @@ typedef struct
 extern CodeDiscMeaser_t Code_Disc;
 extern CodeDiscRobotMeaser_t Code_Disc_robot;
 
+
 /**
  * @brief 码盘坐标转换机器坐标（中心）
  * 
@@ -64,6 +64,7 @@ extern CodeDiscRobotMeaser_t Code_Disc_robot;
 void  code_disc_coodinate2robot_coodinate(CodeDiscRobotMeaser_t *_code_disc_robot_ptr, CodeDiscMeaser_t _code_disc);
 void  CD_get_measer(uint8_t *pdata, uint8_t length);
 void  CD_SET0(UART_HandleTypeDef *usart);
+
 
 typedef union {
     float _float;
