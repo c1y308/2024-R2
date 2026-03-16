@@ -15,6 +15,13 @@
 #define M3508_MOTOR_SPEED_PID_IOUT_LIMIT 1000
 
 
+typedef struct {
+    uint32_t cmd_id;
+    float tar_x;
+    float tar_y;
+    float tar_z;
+    uint8_t mode;
+} ChassisCmd_t;
 
 
 typedef enum
@@ -131,18 +138,18 @@ typedef struct
 	float check_flag_2;
 	float check_flag_3;
 	
-}Robotifo_t;
+}Robotinfo_t;
 
 extern int8_t sign_t;
-extern Robotifo_t robot_ifo;
+extern Robotinfo_t robot_info;
 
-void chassis_feedback_update(Robotifo_t *robot_ifo);
-void cal_chassis_speed_2_motor(Robotifo_t *robot_ifo);
-void chassis_pos_calc(Robotifo_t *chassis_auto_build);
-void input_tarspeed_chassis(Robotifo_t *robot_ifo, float tarx, float tary, float tarz);
-void input_tarpos_chassis(Robotifo_t *robot_ifo, float tarpx, float tarpy,float tarpz);
-void stop_chassis(Robotifo_t *robot_ifo);
-bool chassis_arrive_check(Robotifo_t *robot_ifo);
+void chassis_feedback_update(Robotinfo_t *robot_info);
+void cal_chassis_speed_2_motor(Robotinfo_t *robot_info);
+void chassis_pos_calc(Robotinfo_t *chassis_auto_build);
+void input_tarspeed_chassis(Robotinfo_t *robot_info, float tarx, float tary, float tarz);
+void input_tarpos_chassis(Robotinfo_t *robot_info, float tarpx, float tarpy,float tarpz);
+void stop_chassis(Robotinfo_t *robot_info);
+bool chassis_arrive_check(Robotinfo_t *robot_info);
 
 void chassis_PID_init_outer(void);
 

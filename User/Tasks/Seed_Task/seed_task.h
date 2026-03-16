@@ -55,13 +55,13 @@ typedef struct
 	uint8_t   put_count;
 
 	uint8_t seed_ok;
-}SeedIfo_t;
+}Seedinfo_t;
 
 
-extern SeedIfo_t seed_ifo;
+extern Seedinfo_t seed_info;
 
-void seedtask_init(SeedIfo_t *seed_ifo);
-void plant_task(SeedIfo_t *seed_ifo, grap_t *grap_ifo, Robotifo_t *robot_ifo, TransIfo_t *trans_ifo);
+void seedtask_init(Seedinfo_t *seed_info);
+void plant_task(Seedinfo_t *seed_info, grap_t *grap_info, Robotinfo_t *robot_info, Transinfo_t *trans_info);
 
 void GP_Task_Single(void);
 void Ball_Task_Single(void);

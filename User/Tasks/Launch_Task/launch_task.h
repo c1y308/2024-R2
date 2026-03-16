@@ -22,10 +22,12 @@ typedef enum{
     SECOND_LINE = 0x01,
 }LineState_e;
 
+
 typedef enum{
     LAUNCH_CONFIRM_WAIT = 0x00,
     LAUNCH_CONFIRM_READY = 0x01,
 }LaunchConfirm_e;
+
 
 typedef struct
 {
@@ -71,5 +73,6 @@ typedef enum
     BALL_STATE_LINE_CHANGE_SINGLE_3,
 }BALLState_e;
 
+void launch_task(LaunchInfo_t *launch_info, Robotinfo_t *robot_info);
 
 #endif

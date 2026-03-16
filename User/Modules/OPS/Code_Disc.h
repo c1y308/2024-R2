@@ -2,9 +2,12 @@
 #define __CODE_DISC_H__
 
 #include "ring_buffer.h"
+#include "usart.h"
+
+#define CD_UART_PORT huart3
+
 // #define Code_Disc_on   //表示有码盘
 #define Code_Disc_Offset//码盘安装位置不处于中心点
-#define CD_UART_PORT huart3
 #define ANG2RAD 0.01745329252f
 
 
@@ -71,9 +74,8 @@ typedef union {
     char _char[4];
 } float2char_u;
 
-void CD_SETX(UART_HandleTypeDef *_usart, float _x);
-void CD_SETZ(UART_HandleTypeDef *_usart, float _z);
-void CD_SETY(UART_HandleTypeDef *_usart, float _y);
-void CD_SETALL(UART_HandleTypeDef *_usart, float _x, float _y, float _z);
 
+void CD_SETALL(UART_HandleTypeDef *_usart, float _x, float _y, float _z);
+void Odom_ResetZ();
+void Odom_ResetX();
 #endif

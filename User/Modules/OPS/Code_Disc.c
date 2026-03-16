@@ -1,6 +1,4 @@
 #include "Code_Disc.h"
-#include "string.h"
-#include "math.h"
 
 // Code_Disc_measer Code_Disc;
 // Code_Disc_robot_measer Code_Disc_robot;
@@ -107,7 +105,7 @@ void code_disc_coodinate2robot_coodinate(CodeDiscRobotMeaser_t *_code_disc_robot
 }
 
 
-void CD_SETY(UART_HandleTypeDef *_usart, float _y) {
+static void CD_SETY(UART_HandleTypeDef *_usart, float _y) {
     static char send_string[8] = "ACTY";
     static float2char_u y;
     y._float = _y;
@@ -118,7 +116,7 @@ void CD_SETY(UART_HandleTypeDef *_usart, float _y) {
 }
 
 
-void CD_SETZ(UART_HandleTypeDef *_usart, float _z) {
+static void CD_SETZ(UART_HandleTypeDef *_usart, float _z) {
     static char send_string[8] = "ACTJ";
     static float2char_u z;
     z._float = _z;
@@ -129,7 +127,7 @@ void CD_SETZ(UART_HandleTypeDef *_usart, float _z) {
 }
 
 
-void CD_SETX(UART_HandleTypeDef *_usart, float _x) {
+static void CD_SETX(UART_HandleTypeDef *_usart, float _x) {
     static char send_string[8] = "ACTX";
     static float2char_u x;
     x._float = _x;
@@ -142,7 +140,7 @@ void CD_SETX(UART_HandleTypeDef *_usart, float _x) {
 
 void CD_SETALL(UART_HandleTypeDef *_usart,float _x,float _y, float _z) {
     static char send_string[16] = "ACTD";
-	  static float2char_u x;
+	static float2char_u x;
   	static float2char_u y;
     static float2char_u z;
   	z._float = _z;
@@ -158,4 +156,14 @@ void CD_SETALL(UART_HandleTypeDef *_usart,float _x,float _y, float _z) {
         send_string[12 + i] = y._char[i];
     }
     HAL_UART_Transmit(_usart, (uint8_t *) send_string, 16, 0x0f);
+}
+
+
+
+void Odom_ResetZ(){
+    CD_SETZ(&CD_UART_PORT, 0);
+}
+
+void Odom_ResetX(){
+    CD_SETX(&CD_UART_PORT, -250);
 }

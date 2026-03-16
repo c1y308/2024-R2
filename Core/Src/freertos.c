@@ -25,7 +25,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "chassis_task.h"
+#include "launch_task.h"
 #include "seed_task.h"
 /* USER CODE END Includes */
 
@@ -55,33 +55,38 @@ const osThreadAttr_t defaultTask_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
-/* Definitions for chassis_task */
-osThreadId_t chassis_taskHandle;
-const osThreadAttr_t chassis_task_attributes = {
-  .name = "chassis_task",
+/* Definitions for state_task */
+osThreadId_t state_taskHandle;
+const osThreadAttr_t state_task_attributes = {
+  .name = "state_task",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityHigh6,
+};
+/* Definitions for plant_task */
+osThreadId_t plant_taskHandle;
+const osThreadAttr_t plant_task_attributes = {
+  .name = "plant_task",
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityLow,
 };
-/* Definitions for seed_task */
-osThreadId_t seed_taskHandle;
-const osThreadAttr_t seed_task_attributes = {
-  .name = "seed_task",
+/* Definitions for launch_task */
+osThreadId_t launch_taskHandle;
+const osThreadAttr_t launch_task_attributes = {
+  .name = "launch_task",
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityLow,
 };
-/* Definitions for grap_task */
-osThreadId_t grap_taskHandle;
-const osThreadAttr_t grap_task_attributes = {
-  .name = "grap_task",
+/* Definitions for motor_task */
+osThreadId_t motor_taskHandle;
+const osThreadAttr_t motor_task_attributes = {
+  .name = "motor_task",
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityLow,
 };
-/* Definitions for dji_motor_cntl_task */
-osThreadId_t dji_motor_cntl_taskHandle;
-const osThreadAttr_t dji_motor_cntl_task_attributes = {
-  .name = "dji_motor_cntl_task",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityHigh,
+/* Definitions for chassis_cmd_queue */
+osMessageQueueId_t chassis_cmd_queueHandle;
+const osMessageQueueAttr_t chassis_cmd_queue_attributes = {
+  .name = "chassis_cmd_queue"
 };
 
 /* Private function prototypes -----------------------------------------------*/
@@ -90,10 +95,10 @@ const osThreadAttr_t dji_motor_cntl_task_attributes = {
 /* USER CODE END FunctionPrototypes */
 
 void StartDefaultTask(void *argument);
-void chassis_task_entry(void *argument);
+void state_task_entry(void *argument);
 void seed_task_entry(void *argument);
-void grap_task_entry(void *argument);
-void dji_motor_cntl_task_entry(void *argument);
+void launch_task_entry(void *argument);
+void motor_task_entry(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -119,6 +124,10 @@ void MX_FREERTOS_Init(void) {
   /* start timers, add new ones, ... */
   /* USER CODE END RTOS_TIMERS */
 
+  /* Create the queue(s) */
+  /* creation of chassis_cmd_queue */
+  chassis_cmd_queueHandle = osMessageQueueNew (5, sizeof(ChassisCmd_t), &chassis_cmd_queue_attributes);
+
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
   /* USER CODE END RTOS_QUEUES */
@@ -127,17 +136,17 @@ void MX_FREERTOS_Init(void) {
   /* creation of defaultTask */
   defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
-  /* creation of chassis_task */
-  chassis_taskHandle = osThreadNew(chassis_task_entry, NULL, &chassis_task_attributes);
+  /* creation of state_task */
+  state_taskHandle = osThreadNew(state_task_entry, NULL, &state_task_attributes);
 
-  /* creation of seed_task */
-  seed_taskHandle = osThreadNew(seed_task_entry, NULL, &seed_task_attributes);
+  /* creation of plant_task */
+  plant_taskHandle = osThreadNew(seed_task_entry, NULL, &plant_task_attributes);
 
-  /* creation of grap_task */
-  grap_taskHandle = osThreadNew(grap_task_entry, NULL, &grap_task_attributes);
+  /* creation of launch_task */
+  launch_taskHandle = osThreadNew(launch_task_entry, NULL, &launch_task_attributes);
 
-  /* creation of dji_motor_cntl_task */
-  dji_motor_cntl_taskHandle = osThreadNew(dji_motor_cntl_task_entry, NULL, &dji_motor_cntl_task_attributes);
+  /* creation of motor_task */
+  motor_taskHandle = osThreadNew(motor_task_entry, NULL, &motor_task_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -167,26 +176,22 @@ void StartDefaultTask(void *argument)
   /* USER CODE END StartDefaultTask */
 }
 
-/* USER CODE BEGIN Header_chassis_task_entry */
+/* USER CODE BEGIN Header_state_task_entry */
 /**
-* @brief Function implementing the chassis_task thread.
+* @brief Function implementing the state_task thread.
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_chassis_task_entry */
-void chassis_task_entry(void *argument)
+/* USER CODE END Header_state_task_entry */
+void state_task_entry(void *argument)
 {
-  /* USER CODE BEGIN chassis_task_entry */
+  /* USER CODE BEGIN state_task_entry */
   /* Infinite loop */
   for(;;)
   {
-    chassis_feedback_update();
-    chassis_arrive_check();
-    chassis_calc_tarspeed_task();
-    
     osDelay(1);
   }
-  /* USER CODE END chassis_task_entry */
+  /* USER CODE END state_task_entry */
 }
 
 /* USER CODE BEGIN Header_seed_task_entry */
@@ -208,42 +213,42 @@ void seed_task_entry(void *argument)
   /* USER CODE END seed_task_entry */
 }
 
-/* USER CODE BEGIN Header_grap_task_entry */
+/* USER CODE BEGIN Header_launch_task_entry */
 /**
-* @brief Function implementing the grap_task thread.
+* @brief Function implementing the launch_task thread.
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_grap_task_entry */
-void grap_task_entry(void *argument)
+/* USER CODE END Header_launch_task_entry */
+void launch_task_entry(void *argument)
 {
-  /* USER CODE BEGIN grap_task_entry */
+  /* USER CODE BEGIN launch_task_entry */
   /* Infinite loop */
   for(;;)
   {
-    grap_task();
+    launch_task();
     osDelay(1);
   }
-  /* USER CODE END grap_task_entry */
+  /* USER CODE END launch_task_entry */
 }
 
-/* USER CODE BEGIN Header_dji_motor_cntl_task_entry */
+/* USER CODE BEGIN Header_motor_task_entry */
 /**
-* @brief Function implementing the dji_motor_cntl_task thread.
+* @brief Function implementing the motor_task thread.
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_dji_motor_cntl_task_entry */
-void dji_motor_cntl_task_entry(void *argument)
+/* USER CODE END Header_motor_task_entry */
+void motor_task_entry(void *argument)
 {
-  /* USER CODE BEGIN dji_motor_cntl_task_entry */
+  /* USER CODE BEGIN motor_task_entry */
   /* Infinite loop */
   for(;;)
   {
-    dji_motor_control();
+    
     osDelay(1);
   }
-  /* USER CODE END dji_motor_cntl_task_entry */
+  /* USER CODE END motor_task_entry */
 }
 
 /* Private application code --------------------------------------------------*/

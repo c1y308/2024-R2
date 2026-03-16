@@ -6,7 +6,7 @@ float controller_vx;
 float controller_vy;
 float controller_wz;
 
-Robotifo_t robot_ifo;
+Robotinfo_t robot_info;
 
 int8_t sign_t = 1;
 
@@ -119,22 +119,22 @@ void All_Init()
 	
 	// sign_t = 1;
 	
-	// grap_ifo.grap_arrive = 0;
-	// grap_ifo.start_storage = 0;
-	// grap_ifo.start_storage_out = 0;
+	// grap_info.grap_arrive = 0;
+	// grap_info.start_storage = 0;
+	// grap_info.start_storage_out = 0;
 
-	// robot_ifo.protect_flag = 1;
-	// robot_ifo.disable_rotation_flag = 0;
+	// robot_info.protect_flag = 1;
+	// robot_info.disable_rotation_flag = 0;
 	
-	robot_ifo.sac = 0;
-	robot_ifo.limit_vy_flag = 0;
-	robot_ifo.red_single_flag = robot_ifo.blue_single_flag = 0;
-	robot_ifo.init_tick = 0;
+	robot_info.sac = 0;
+	robot_info.limit_vy_flag = 0;
+	robot_info.red_single_flag = robot_info.blue_single_flag = 0;
+	robot_info.init_tick = 0;
 
 
-	robot_ifo.task_type = TASK_TYPE_CHASSIS_INIT;
-  	robot_ifo.chassis_state = CHASSIS_MODE_AUTO;
-	robot_ifo.tol_state = CHASSIS_MODE_TOL_SMALL;
+	robot_info.task_type = TASK_TYPE_CHASSIS_INIT;
+  	robot_info.chassis_state = CHASSIS_MODE_AUTO;
+	robot_info.tol_state = CHASSIS_MODE_TOL_SMALL;
 	// UART_DMA_Recevie_init(&huart1,buffer_receve_1,100); 
 	// UART_DMA_Recevie_init(&huart2,buffer_receve_2,100);
 	// UART_DMA_Recevie_init(&huart3,buffer_receve_3,100);
@@ -144,45 +144,45 @@ void All_Init()
 
 void Chassis_Callback()
 {
-	chassis_feedback_update(&robot_ifo);
+	chassis_feedback_update(&robot_info);
 	// Calc_Send_Task();
 }
 
 
 /* 底盘反馈更新:获取当前底盘速度和位置，更新位置/角度的误差信息 */
-void chassis_feedback_update(Robotifo_t *robot_ifo)
+void chassis_feedback_update(Robotinfo_t *robot_info)
 {
 
-	robot_ifo->speed_now.vx = (motor_lf->measure.speed_rpm + motor_lb->measure.speed_rpm) / 2;
-	robot_ifo->speed_now.vy = (motor_lf->measure.speed_rpm - motor_lb->measure.speed_rpm) / 2;
-	robot_ifo->speed_now.wz = Code_Disc_robot.pal_yaw_rad;
+	robot_info->speed_now.vx = (motor_lf->measure.speed_rpm + motor_lb->measure.speed_rpm) / 2;
+	robot_info->speed_now.vy = (motor_lf->measure.speed_rpm - motor_lb->measure.speed_rpm) / 2;
+	robot_info->speed_now.wz = Code_Disc_robot.pal_yaw_rad;
 	
-	robot_ifo->pos_now.pos_x = - Code_Disc_robot.x;
-	robot_ifo->pos_now.pos_y = - Code_Disc_robot.y;
-	robot_ifo->pos_now.pos_z =   Code_Disc_robot.yaw_rad * RADIAN_TO_ANGLE;	
+	robot_info->pos_now.pos_x = - Code_Disc_robot.x;
+	robot_info->pos_now.pos_y = - Code_Disc_robot.y;
+	robot_info->pos_now.pos_z =   Code_Disc_robot.yaw_rad * RADIAN_TO_ANGLE;	
 
 
-	robot_ifo->pos_error.ErrorposX_temp = robot_ifo->pos_now.pos_x - robot_ifo->pos_target.pos_x;
-	robot_ifo->pos_error.ErrorposY_temp = robot_ifo->pos_now.pos_y - robot_ifo->pos_target.pos_y;
+	robot_info->pos_error.ErrorposX_temp = robot_info->pos_now.pos_x - robot_info->pos_target.pos_x;
+	robot_info->pos_error.ErrorposY_temp = robot_info->pos_now.pos_y - robot_info->pos_target.pos_y;
 	
-	robot_ifo->pos_error.ErrorposX = cos(  robot_ifo->pos_now.pos_z * ANG2RAD) * \
-	robot_ifo->pos_error.ErrorposX_temp - sin(- robot_ifo->pos_now.pos_z * ANG2RAD) * robot_ifo->pos_error.ErrorposY_temp;
+	robot_info->pos_error.ErrorposX = cos(  robot_info->pos_now.pos_z * ANG2RAD) * \
+	robot_info->pos_error.ErrorposX_temp - sin(- robot_info->pos_now.pos_z * ANG2RAD) * robot_info->pos_error.ErrorposY_temp;
 
-	robot_ifo->pos_error.ErrorposY = sin(- robot_ifo->pos_now.pos_z * ANG2RAD) * \
-	robot_ifo->pos_error.ErrorposX_temp + cos(  robot_ifo->pos_now.pos_z * ANG2RAD) * robot_ifo->pos_error.ErrorposY_temp;
+	robot_info->pos_error.ErrorposY = sin(- robot_info->pos_now.pos_z * ANG2RAD) * \
+	robot_info->pos_error.ErrorposX_temp + cos(  robot_info->pos_now.pos_z * ANG2RAD) * robot_info->pos_error.ErrorposY_temp;
 
-	robot_ifo->pos_error.ErrorposZ = robot_ifo->pos_now.pos_z - robot_ifo->pos_target.pos_z;
+	robot_info->pos_error.ErrorposZ = robot_info->pos_now.pos_z - robot_info->pos_target.pos_z;
 }
 
 
-bool chassis_arrive_check(Robotifo_t *robot_ifo){
+bool chassis_arrive_check(Robotinfo_t *robot_info){
 	static int16_t chassis_tol = 0;
 	static int16_t check_tick = 0;
 	static int16_t cur_tick = 0;
 
 	static int16_t crack_time = 0;
 	/* 检查底盘是否到达目标位置的误差容忍度 */
-	switch (robot_ifo->tol_state)
+	switch (robot_info->tol_state)
 	{
 		case CHASSIS_MODE_TOL_BIG:{
 			check_tick  = CHECK_TICK_SMALL;
@@ -199,106 +199,106 @@ bool chassis_arrive_check(Robotifo_t *robot_ifo){
 	}
 
 	/* 检查地盘控制模式，全自动/半自动/手动 */
-	switch (robot_ifo->chassis_state)
+	switch (robot_info->chassis_state)
 	{
 		case CHASSIS_MODE_AUTO:{
-			if(fabs(robot_ifo->pos_error.ErrorposX) <= chassis_tol && fabs(robot_ifo->pos_error.ErrorposY) <= chassis_tol && \
-			   fabs(robot_ifo->pos_error.ErrorposZ) <= 1 )
+			if(fabs(robot_info->pos_error.ErrorposX) <= chassis_tol && fabs(robot_info->pos_error.ErrorposY) <= chassis_tol && \
+			   fabs(robot_info->pos_error.ErrorposZ) <= 1 )
 			{   
 				cur_tick++;
 				if(cur_tick >= check_tick)
 				{
 					cur_tick = 0;
-					robot_ifo->chassis_arrive = 1;
+					robot_info->chassis_arrive = 1;
 					return true;
 				}
 			}else{
-				robot_ifo->chassis_arrive = 0;
+				robot_info->chassis_arrive = 0;
 				return false;
 			}
 			break;
 		}
 		case CHASSIS_MODE_MIX_SEED:{
-			if(fabs(robot_ifo->speed_now.vy) <= 0.001 && fabs(robot_ifo->pos_error.ErrorposY) <= 50)
+			if(fabs(robot_info->speed_now.vy) <= 0.001 && fabs(robot_info->pos_error.ErrorposY) <= 50)
 			{
 				crack_time++;
 				if(crack_time >= 20)
-			  		robot_ifo->stop_crack = 1;
+			  		robot_info->stop_crack = 1;
 			}
 			else
 				crack_time = 0;
 
-			if(fabs(robot_ifo->pos_error.ErrorposX) <= chassis_tol && robot_ifo->stop_crack == 1)
+			if(fabs(robot_info->pos_error.ErrorposX) <= chassis_tol && robot_info->stop_crack == 1)
 			{   
-				robot_ifo->speed_target.vx = robot_ifo->speed_target.wz = 0;
+				robot_info->speed_target.vx = robot_info->speed_target.wz = 0;
 				cur_tick++;
 				if(cur_tick >= check_tick)
 				{
-					robot_ifo->stop_crack = 0;
+					robot_info->stop_crack = 0;
 					cur_tick = 0;
-					robot_ifo->chassis_arrive = 1;
+					robot_info->chassis_arrive = 1;
 					return true;
 				}
 			}else{
-				robot_ifo->chassis_arrive = 0;
+				robot_info->chassis_arrive = 0;
 				return false;
 			}
 			break;
 		}
 		case CHASSIS_HYBRID_XS:
 		{
-			if(fabs(robot_ifo->pos_error.ErrorposY) <= chassis_tol && fabs(robot_ifo->pos_error.ErrorposZ) <= 1)
+			if(fabs(robot_info->pos_error.ErrorposY) <= chassis_tol && fabs(robot_info->pos_error.ErrorposZ) <= 1)
 			{   
 				cur_tick++;
 				if(cur_tick >= check_tick)
 				{
 					cur_tick = 0;
-					robot_ifo->chassis_arrive = 1;
+					robot_info->chassis_arrive = 1;
 					return true;
 				}
 			}else{
-				robot_ifo->chassis_arrive = 0;
+				robot_info->chassis_arrive = 0;
 				return false;
 			}
 			break;
 		}
 		case CHASSIS_HYBRID_YS:
 		{
-			if(fabs(robot_ifo->pos_error.ErrorposX) <= chassis_tol && fabs(robot_ifo->pos_error.ErrorposZ) <= 1)
+			if(fabs(robot_info->pos_error.ErrorposX) <= chassis_tol && fabs(robot_info->pos_error.ErrorposZ) <= 1)
 			{   
 				cur_tick++;
 				if(cur_tick >= check_tick)
 				{
 					cur_tick = 0;
-					robot_ifo->chassis_arrive = 1;
+					robot_info->chassis_arrive = 1;
 					return true;
 				}
 			}else{
-				robot_ifo->chassis_arrive = 0;
+				robot_info->chassis_arrive = 0;
 				return false;
 			}
 			break;
 		}
 		case CHASSIS_HYBRID_XSYS:
 		{
-			if(fabs(robot_ifo->pos_error.ErrorposZ) <= 1)
+			if(fabs(robot_info->pos_error.ErrorposZ) <= 1)
 			{   
 				cur_tick++;
 				if(cur_tick >= check_tick)
 				{
 					cur_tick = 0;
-					robot_ifo->chassis_arrive = 1;
+					robot_info->chassis_arrive = 1;
 					return true;
 				}
 			}else{
-				robot_ifo->chassis_arrive = 0;
+				robot_info->chassis_arrive = 0;
 				return false;
 			}
 			break;
 		}
 		
 		default:{
-			robot_ifo->chassis_arrive = 1;
+			robot_info->chassis_arrive = 1;
 			return true;
 			break;
 		}
@@ -308,63 +308,63 @@ bool chassis_arrive_check(Robotifo_t *robot_ifo){
 
 
 /* 目的是得到地盘的目标速度 */
-void chassis_calc_tarspeed_task(Robotifo_t *robot_ifo)
+void chassis_calc_tarspeed_task(Robotinfo_t *robot_info)
 {
 	static float vy_limit = 2;
-	switch(robot_ifo->chassis_state)
+	switch(robot_info->chassis_state)
 	{
 		case CHASSIS_MODE_AUTO:
 		{
-			chassis_pos_calc(&robot_ifo);
+			chassis_pos_calc(&robot_info);
 			// 此处可以进行优化，进行解耦，当接近目标点时，单独进行一个减速的函数，或者在位置环中加入一个根据误差自动调整输出的函数 
-			if(fabs(robot_ifo->pos_error.ErrorposY) < LOW_DES_COM && seed_ifo.seed_state == SEED_STATE_MOVE_2_GET)  // &&seed_ifo.cnm == 0
+			if(fabs(robot_info->pos_error.ErrorposY) < LOW_DES_COM && seed_info.seed_state == SEED_STATE_MOVE_2_GET)  // &&seed_info.cnm == 0
 			{
 				 vy_limit = vy_limit - 1.45;
 				 if(vy_limit <= LOW_SPEED)
 					 vy_limit = LOW_SPEED;
-				 abs_limit(&robot_ifo->speed_target.vy,vy_limit);
+				 abs_limit(&robot_info->speed_target.vy,vy_limit);
 			}
 			break;
 		}
 		case CHASSIS_MODE_MANUAL:
 		{
-			robot_ifo->speed_target.vx = robot_ifo->speed_target.target_vx_direct;
-			robot_ifo->speed_target.vy = robot_ifo->speed_target.target_vy_direct;
-			robot_ifo->speed_target.wz = robot_ifo->speed_target.target_wz_direct;
+			robot_info->speed_target.vx = robot_info->speed_target.target_vx_direct;
+			robot_info->speed_target.vy = robot_info->speed_target.target_vy_direct;
+			robot_info->speed_target.wz = robot_info->speed_target.target_wz_direct;
 
-			robot_ifo->chassis_state = CHASSIS_MODE_AUTO;
+			robot_info->chassis_state = CHASSIS_MODE_AUTO;
 		}
 		case CHASSIS_HYBRID_XS:
 		{
-			chassis_pos_calc(robot_ifo);
-			robot_ifo->speed_target.vx = robot_ifo->speed_target.target_vx_direct;
+			chassis_pos_calc(robot_info);
+			robot_info->speed_target.vx = robot_info->speed_target.target_vx_direct;
 		}
 		case CHASSIS_HYBRID_YS:
 		{
-			chassis_pos_calc(robot_ifo);
-			robot_ifo->speed_target.vy = robot_ifo->speed_target.target_vy_direct;
+			chassis_pos_calc(robot_info);
+			robot_info->speed_target.vy = robot_info->speed_target.target_vy_direct;
 		}
 		case CHASSIS_HYBRID_XSYS:
 		{
-			chassis_pos_calc(robot_ifo);
-			robot_ifo->speed_target.vx = robot_ifo->speed_target.target_vx_direct;
-			robot_ifo->speed_target.vy = robot_ifo->speed_target.target_vy_direct;
+			chassis_pos_calc(robot_info);
+			robot_info->speed_target.vx = robot_info->speed_target.target_vx_direct;
+			robot_info->speed_target.vy = robot_info->speed_target.target_vy_direct;
 		}
 		case CHASSIS_MODE_MIX_SEED:{
-			chassis_pos_calc(robot_ifo);
-			if(robot_ifo->stop_crack == 1)
-				robot_ifo->speed_target.vy = 0;
+			chassis_pos_calc(robot_info);
+			if(robot_info->stop_crack == 1)
+				robot_info->speed_target.vy = 0;
 			else
 			{
-				robot_ifo->speed_target.vy = robot_ifo->speed_target.target_vy_direct;
+				robot_info->speed_target.vy = robot_info->speed_target.target_vy_direct;
 
-				if(fabs(robot_ifo->pos_error.ErrorposY) < LOW_DES_COM &&         \
-						robot_ifo->pos_target.pos_y == crack_posY)  // && seed_ifo.cnm == 0
+				if(fabs(robot_info->pos_error.ErrorposY) < LOW_DES_COM &&         \
+						robot_info->pos_target.pos_y == crack_posY)  // && seed_info.cnm == 0
 				{
           			vy_limit = vy_limit - 1.45;
 					if(vy_limit <= LOW_SPEED)
 						 vy_limit = LOW_SPEED;
-					 abs_limit(&robot_ifo->speed_target.vy,vy_limit);
+					 abs_limit(&robot_info->speed_target.vy,vy_limit);
 				}
 				else
           			vy_limit = RUN_S;
@@ -373,18 +373,18 @@ void chassis_calc_tarspeed_task(Robotifo_t *robot_ifo)
 		}
 		case CHASSIS_MODE_STOP:
 		{
-			robot_ifo->speed_target.vx = 0;
-			robot_ifo->speed_target.vy = 0;
-			robot_ifo->speed_target.wz = 0;
-			robot_ifo->sac++;
+			robot_info->speed_target.vx = 0;
+			robot_info->speed_target.vy = 0;
+			robot_info->speed_target.wz = 0;
+			robot_info->sac++;
 		}
 	}
 
-	cal_chassis_speed_2_motor(robot_ifo);
+	cal_chassis_speed_2_motor(robot_info);
 
-	if(robot_ifo->sac >= 400 && robot_ifo->chassis_state == CHASSIS_MODE_STOP)
+	if(robot_info->sac >= 400 && robot_info->chassis_state == CHASSIS_MODE_STOP)
 	{
-		if(robot_ifo->sac >= 1000)
+		if(robot_info->sac >= 1000)
 		{
 			Set_PWM_Motor_Speed(&hcan1, 0, 0, 0, 0);
 		}
@@ -399,59 +399,59 @@ void chassis_calc_tarspeed_task(Robotifo_t *robot_ifo)
 }
 
 /* 进行地盘位置环计算，得到目标速度 */
-void chassis_pos_calc(Robotifo_t *robot_ifo) 
+void chassis_pos_calc(Robotinfo_t *robot_info) 
 {	
-	PID_calc(&pid_DJI_outer[0], robot_ifo->pos_error.ErrorposX, 0);
-	PID_calc(&pid_DJI_outer[1], robot_ifo->pos_error.ErrorposY, 0);
-	PID_calc(&pid_DJI_outer[2], robot_ifo->pos_error.ErrorposZ, 0);
+	PID_calc(&pid_DJI_outer[0], robot_info->pos_error.ErrorposX, 0);
+	PID_calc(&pid_DJI_outer[1], robot_info->pos_error.ErrorposY, 0);
+	PID_calc(&pid_DJI_outer[2], robot_info->pos_error.ErrorposZ, 0);
 	
 	first_order_filter_cali(&filter_chassis_vx, pid_DJI_outer[0].out);
 	first_order_filter_cali(&filter_chassis_vy, pid_DJI_outer[1].out);
 
 	if (fabs(pid_DJI_outer[0].out) <= fabs(filter_chassis_vx.out))
-		  robot_ifo->speed_target.vx = pid_DJI_outer[0].out;
-	else  robot_ifo->speed_target.vx = filter_chassis_vx.out;
+		  robot_info->speed_target.vx = pid_DJI_outer[0].out;
+	else  robot_info->speed_target.vx = filter_chassis_vx.out;
     
 	if (fabs(pid_DJI_outer[1].out) <= fabs(filter_chassis_vy.out))
-		  robot_ifo->speed_target.vy = pid_DJI_outer[1].out;
-	else  robot_ifo->speed_target.vy = filter_chassis_vy.out;
+		  robot_info->speed_target.vy = pid_DJI_outer[1].out;
+	else  robot_info->speed_target.vy = filter_chassis_vy.out;
 
-	if(robot_ifo->limit_vy_flag == 1)
-		abs_limit(&robot_ifo->speed_target.vy,1.6);	
+	if(robot_info->limit_vy_flag == 1)
+		abs_limit(&robot_info->speed_target.vy,1.6);	
 
 
-	if(robot_ifo->pos_error.ErrorposZ > 180)
-		robot_ifo->speed_target.wz =   pid_DJI_outer[2].out;
+	if(robot_info->pos_error.ErrorposZ > 180)
+		robot_info->speed_target.wz =   pid_DJI_outer[2].out;
 	else
-		robot_ifo->speed_target.wz = - pid_DJI_outer[2].out;
+		robot_info->speed_target.wz = - pid_DJI_outer[2].out;
 }
 
 
 /* 进行地盘速度环计算，得到目标电机速度 */
-void cal_chassis_speed_2_motor(Robotifo_t *robot_ifo)
+void cal_chassis_speed_2_motor(Robotinfo_t *robot_info)
 {
-	dji_motor_setref(motor_lf, (+robot_ifo->speed_target.vy + robot_ifo->speed_target.vx + robot_ifo->speed_target.wz));
-	dji_motor_setref(motor_lb, (-robot_ifo->speed_target.vy + robot_ifo->speed_target.vx + robot_ifo->speed_target.wz));
-	dji_motor_setref(motor_rb, (+robot_ifo->speed_target.vy - robot_ifo->speed_target.vx + robot_ifo->speed_target.wz));
-	dji_motor_setref(motor_rf, (-robot_ifo->speed_target.vy - robot_ifo->speed_target.vx + robot_ifo->speed_target.wz));
+	dji_motor_setref(motor_lf, (+robot_info->speed_target.vy + robot_info->speed_target.vx + robot_info->speed_target.wz));
+	dji_motor_setref(motor_lb, (-robot_info->speed_target.vy + robot_info->speed_target.vx + robot_info->speed_target.wz));
+	dji_motor_setref(motor_rb, (+robot_info->speed_target.vy - robot_info->speed_target.vx + robot_info->speed_target.wz));
+	dji_motor_setref(motor_rf, (-robot_info->speed_target.vy - robot_info->speed_target.vx + robot_info->speed_target.wz));
 }
 
 
-void input_tarspeed_chassis(Robotifo_t *robot_ifo, float tarx, float tary, float tarz)
+void input_tarspeed_chassis(Robotinfo_t *robot_info, float tarx, float tary, float tarz)
 {
-  	robot_ifo->chassis_state = CHASSIS_MODE_MANUAL;
-	robot_ifo->speed_target.vx = tarx;
-	robot_ifo->speed_target.vy = tary;
-	robot_ifo->speed_target.wz = tarz;
+  	robot_info->chassis_state = CHASSIS_MODE_MANUAL;
+	robot_info->speed_target.vx = tarx;
+	robot_info->speed_target.vy = tary;
+	robot_info->speed_target.wz = tarz;
 }
 
 
-void input_tarpos_chassis(Robotifo_t *robot_ifo, float tarpx, float tarpy,float tarpz)
+void input_tarpos_chassis(Robotinfo_t *robot_info, float tarpx, float tarpy,float tarpz)
 {
-  	robot_ifo->chassis_state = CHASSIS_MODE_AUTO;
-	robot_ifo->pos_target.pos_x = tarpx;
-	robot_ifo->pos_target.pos_y = tarpy;
-	robot_ifo->pos_target.pos_z = tarpz;
+  	robot_info->chassis_state = CHASSIS_MODE_AUTO;
+	robot_info->pos_target.pos_x = tarpx;
+	robot_info->pos_target.pos_y = tarpy;
+	robot_info->pos_target.pos_z = tarpz;
 }
 
 
@@ -463,9 +463,9 @@ void Filter_Init_All(void)
 }
 
 
-void stop_chassis(Robotifo_t *robot_ifo)
+void stop_chassis(Robotinfo_t *robot_info)
 {
-   robot_ifo->chassis_state = CHASSIS_MODE_STOP;
-   robot_ifo->speed_target.vx = robot_ifo->speed_target.vy = robot_ifo->speed_target.wz = 0;
+   robot_info->chassis_state = CHASSIS_MODE_STOP;
+   robot_info->speed_target.vx = robot_info->speed_target.vy = robot_info->speed_target.wz = 0;
 }
 
