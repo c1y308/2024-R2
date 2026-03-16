@@ -1,9 +1,5 @@
 #include "seed_task.h"
-#include "Code_Disc.h"
-#include "usart.h"
-#include "pid.h"
-#include "main.h"
-#include "launch_module.h"
+
 
 SeedIfo_t seed_ifo;
 float speed_move_seed = -2;
@@ -233,6 +229,7 @@ void plant_task(SeedIfo_t *seed_ifo, grap_t *grap_ifo, Robotifo_t *robot_ifo, Tr
 			  	if(seed_ifo->pos_index >= 6)
 				{
 					seed_ifo->run_tick = 0;
+					/* 此处可以修改为任务调度的形式 */
 					start_transition_task(robot_ifo, trans_ifo);
 					break;
 				}

@@ -93,6 +93,7 @@ User\Tasks\Launch_Task\launch_task.c \
 User\Tasks\Seed_Task\seed_task.c \
 User\Tasks\Single_Task\single_task.c \
 User\Tasks\Trans_Task\trans_task.c \
+User\Tasks\Remake_Task\remake_task.c
 
 
 
@@ -180,6 +181,7 @@ C_INCLUDES =  \
 -IUser\Modules\Chassis_Module \
 -IUser\Modules\Grap_Module \
 -IUser\Modules\Launch_Module \
+-IUser\Modules\Remake_Module \
 -IUser\Modules\NRF24L01 \
 -IUser\Modules\OPS \
 -IUser\Modules\UART_DMA \

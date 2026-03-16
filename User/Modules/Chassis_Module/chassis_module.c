@@ -1,11 +1,4 @@
 #include "chassis_module.h"
-#include "vofa_setting.h"
-#include "vofa.h"
-#include "uart_dma.h"
-#include "pid.h"
-#include "user_lib.h"
-#include "main.h"
-#include "stdio.h"
 #include "Code_Disc.h"
 #include "NRF24L01.h"
 #include "dji_motor.h"
@@ -126,9 +119,9 @@ void All_Init()
 	
 	// sign_t = 1;
 	
-	grap_ifo.grap_arrive = 0;
-	grap_ifo.start_storage = 0;
-	grap_ifo.start_storage_out = 0;
+	// grap_ifo.grap_arrive = 0;
+	// grap_ifo.start_storage = 0;
+	// grap_ifo.start_storage_out = 0;
 
 	// robot_ifo.protect_flag = 1;
 	// robot_ifo.disable_rotation_flag = 0;
@@ -142,9 +135,9 @@ void All_Init()
 	robot_ifo.task_type = TASK_TYPE_CHASSIS_INIT;
   	robot_ifo.chassis_state = CHASSIS_MODE_AUTO;
 	robot_ifo.tol_state = CHASSIS_MODE_TOL_SMALL;
-	UART_DMA_Recevie_init(&huart1,buffer_receve_1,100); 
-	UART_DMA_Recevie_init(&huart2,buffer_receve_2,100);
-	UART_DMA_Recevie_init(&huart3,buffer_receve_3,100);
+	// UART_DMA_Recevie_init(&huart1,buffer_receve_1,100); 
+	// UART_DMA_Recevie_init(&huart2,buffer_receve_2,100);
+	// UART_DMA_Recevie_init(&huart3,buffer_receve_3,100);
 
 }
 
@@ -475,46 +468,4 @@ void stop_chassis(Robotifo_t *robot_ifo)
    robot_ifo->chassis_state = CHASSIS_MODE_STOP;
    robot_ifo->speed_target.vx = robot_ifo->speed_target.vy = robot_ifo->speed_target.wz = 0;
 }
-
-
-void Remake_Task(Robotifo_t *robot_ifo)
-{
-  	static uint16_t remake_tick = 0;
-	static float temp_x, temp_y;
-	
-	remake_tick++;
-	
-	if(remake_tick <= REMAKE_TX)
-		temp_x = REMAKE_SPEEDX * sign_t;
-	else
-		temp_x = 0;
-	if(remake_tick <= REMAKE_TY)
-		temp_y = REMAKE_SPEEDY;
-	else
-		temp_y = 0;
-	if(250 + REMAKE_TY > remake_tick && remake_tick > REMAKE_TY)
-	{
-		magnet_control();
-	  temp_x = -0.4 * sign_t;
-		temp_y = 0;
-	}
-
-	input_tarspeed_chassis(robot_ifo, temp_x, temp_y, 0);
-
-	if(REMAKE_TY + 320 > remake_tick && remake_tick > 300 + REMAKE_TY)
-	{
-		CD_SETX(&huart3, -(float)real_lv100);
-	}
-	if(REMAKE_TY+320 <= remake_tick)
-	{
-	  CD_SETY(&huart3,0);
-
-		Input_TarPos_Chassis(0, robot_ifo->pos_target.pos_y, 0);
-
-		input_tarpos_chassis(robot_ifo, 0, robot_ifo->pos_target.pos_y, 0);
-		remake_tick = 0;
-		robot_ifo->task_type = TASK_TYPE_BALL;
-	}
-}
-
 

@@ -2,12 +2,10 @@
 #define CHASSIS_TASK_H
 
 #include "pid.h"
-#include "user_lib.h"
 #include "can_trx.h"
 #include "pid.h"
-#include "seed_task.h"
 #include <stdbool.h>
-
+#include "user_config.h"
 #define TIMEFORACC 0.03f
 #define M3508_MOTOR_SPEED_PID_KP 10000.0f
 #define M3508_MOTOR_SPEED_PID_KI 10.0f
