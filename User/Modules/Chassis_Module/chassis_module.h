@@ -3,9 +3,13 @@
 
 #include "pid.h"
 #include "can_trx.h"
-#include "pid.h"
 #include <stdbool.h>
 #include "user_config.h"
+
+#include "FreeRTOS.h"
+#include "task.h"
+#include "cmsis_os.h"
+
 #define TIMEFORACC 0.03f
 #define M3508_MOTOR_SPEED_PID_KP 10000.0f
 #define M3508_MOTOR_SPEED_PID_KI 10.0f
@@ -13,16 +17,33 @@
 
 #define M3508_MOTOR_SPEED_PID_POUT_LIMIT 8000
 #define M3508_MOTOR_SPEED_PID_IOUT_LIMIT 1000
+/**************************************************/
+// 定义单轴的控制模式
+typedef enum {
+    AXIS_MODE_STOP = 0,   // 刹车/锁死
+    AXIS_MODE_VEL  = 1,   // 速度控制
+    AXIS_MODE_POS  = 2    // 位置控制
+} AxisMode_e;
 
 
+// 极其清晰的底盘指令包
 typedef struct {
-    uint32_t cmd_id;
-    float tar_x;
-    float tar_y;
-    float tar_z;
-    uint8_t mode;
-} ChassisCmd_t;
+    uint32_t cmd_seq_id;  // 命令序列号，用于同步
+    
+    // 三轴控制模式
+    AxisMode_e mode_x;
+    AxisMode_e mode_y;
+    AxisMode_e mode_z; 
+    
+	// 目标位置
+	PosTarget_t pos_target;
+    
+    // 目标速度
+	SpeedTarget_t speed_target;
 
+    
+} ChassisCmd_t;
+/**************************************************/
 
 typedef enum
 {
@@ -38,18 +59,6 @@ typedef enum
     TASK_TYPE_SINGLE       = 0x0A,
     TASK_TYPE_SINGLE_BALL  = 0x0B,
 } TaskType_e;
-
-
-typedef enum
-{
-    CHASSIS_MODE_AUTO 	   = 0x20,
-    CHASSIS_MODE_MANUAL    = 0x24,
-    CHASSIS_HYBRID_XS      = 0x28,  // X 轴速度环
-    CHASSIS_HYBRID_YS      = 0x32,  // Y 轴速度环
-    CHASSIS_HYBRID_XSYS    = 0x36,  // X 轴速度环 + Y 轴速度环
-    CHASSIS_MODE_MIX_SEED  = 0x40,
-	CHASSIS_MODE_STOP      = 0x4C,
-}ChassisState_e;
 
 
 typedef enum
@@ -92,10 +101,6 @@ typedef struct
 	float vx;
 	float vy;
 	float wz;
-
-	float target_vx_direct;
-	float target_vy_direct;
-	float target_wz_direct;
 }SpeedTarget_t;
 
 
@@ -107,9 +112,15 @@ typedef struct
 }SpeedNow_t;
 
 
-
 typedef struct
 {
+	uint32_t cmd_seq_id;
+	uint32_t arrived_seq_id;
+	// 三轴控制模式
+    AxisMode_e mode_x;
+    AxisMode_e mode_y;
+    AxisMode_e mode_z; 
+
 	uint32_t sac;
 
 	uint8_t limit_vy_flag;
@@ -119,9 +130,9 @@ typedef struct
 	uint8_t stop_crack;
 	
 	TolState_e tol_state;
-
 	TaskType_e task_type;
-	ChassisState_e chassis_state;
+
+	// ChassisMode_e chassis_mode;
 	
 	PosTarget_t pos_target;
 	PosNow_t 	pos_now;
@@ -131,8 +142,6 @@ typedef struct
 	SpeedNow_t 	  speed_now;
 	
 	int16_t init_tick;
-	
-	uint8_t chassis_arrive;
 
 	float check_flag;
 	float check_flag_2;
@@ -141,20 +150,7 @@ typedef struct
 }Robotinfo_t;
 
 extern int8_t sign_t;
-extern Robotinfo_t robot_info;
-
-void chassis_feedback_update(Robotinfo_t *robot_info);
-void cal_chassis_speed_2_motor(Robotinfo_t *robot_info);
-void chassis_pos_calc(Robotinfo_t *chassis_auto_build);
-void input_tarspeed_chassis(Robotinfo_t *robot_info, float tarx, float tary, float tarz);
-void input_tarpos_chassis(Robotinfo_t *robot_info, float tarpx, float tarpy,float tarpz);
-void stop_chassis(Robotinfo_t *robot_info);
-bool chassis_arrive_check(Robotinfo_t *robot_info);
-
-void chassis_PID_init_outer(void);
-
-extern float controller_vx;
-extern float controller_vy;
-extern float controller_wz;
+extern osMessageQueueId_t chassis_cmd_queueHandle;
+void chassis_task_entry(void *argument);
 #endif
 

@@ -25,8 +25,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "launch_task.h"
-#include "seed_task.h"
+#include "chassis_module.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -55,12 +54,19 @@ const osThreadAttr_t defaultTask_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
-/* Definitions for state_task */
-osThreadId_t state_taskHandle;
-const osThreadAttr_t state_task_attributes = {
-  .name = "state_task",
+/* Definitions for motor_task */
+osThreadId_t motor_taskHandle;
+const osThreadAttr_t motor_task_attributes = {
+  .name = "motor_task",
   .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityHigh6,
+  .priority = (osPriority_t) osPriorityLow,
+};
+/* Definitions for chassis_task */
+osThreadId_t chassis_taskHandle;
+const osThreadAttr_t chassis_task_attributes = {
+  .name = "chassis_task",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityLow,
 };
 /* Definitions for plant_task */
 osThreadId_t plant_taskHandle;
@@ -76,13 +82,6 @@ const osThreadAttr_t launch_task_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityLow,
 };
-/* Definitions for motor_task */
-osThreadId_t motor_taskHandle;
-const osThreadAttr_t motor_task_attributes = {
-  .name = "motor_task",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityLow,
-};
 /* Definitions for chassis_cmd_queue */
 osMessageQueueId_t chassis_cmd_queueHandle;
 const osMessageQueueAttr_t chassis_cmd_queue_attributes = {
@@ -95,10 +94,10 @@ const osMessageQueueAttr_t chassis_cmd_queue_attributes = {
 /* USER CODE END FunctionPrototypes */
 
 void StartDefaultTask(void *argument);
-void state_task_entry(void *argument);
-void seed_task_entry(void *argument);
-void launch_task_entry(void *argument);
 void motor_task_entry(void *argument);
+extern void chassis_task_entry(void *argument);
+void plant_task_entry(void *argument);
+void launch_task_entry(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -126,7 +125,7 @@ void MX_FREERTOS_Init(void) {
 
   /* Create the queue(s) */
   /* creation of chassis_cmd_queue */
-  chassis_cmd_queueHandle = osMessageQueueNew (5, sizeof(ChassisCmd_t), &chassis_cmd_queue_attributes);
+  chassis_cmd_queueHandle = osMessageQueueNew (16, sizeof(ChassisCmd_t), &chassis_cmd_queue_attributes);
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
@@ -136,17 +135,17 @@ void MX_FREERTOS_Init(void) {
   /* creation of defaultTask */
   defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
-  /* creation of state_task */
-  state_taskHandle = osThreadNew(state_task_entry, NULL, &state_task_attributes);
+  /* creation of motor_task */
+  motor_taskHandle = osThreadNew(motor_task_entry, NULL, &motor_task_attributes);
+
+  /* creation of chassis_task */
+  chassis_taskHandle = osThreadNew(chassis_task_entry, NULL, &chassis_task_attributes);
 
   /* creation of plant_task */
-  plant_taskHandle = osThreadNew(seed_task_entry, NULL, &plant_task_attributes);
+  plant_taskHandle = osThreadNew(plant_task_entry, NULL, &plant_task_attributes);
 
   /* creation of launch_task */
   launch_taskHandle = osThreadNew(launch_task_entry, NULL, &launch_task_attributes);
-
-  /* creation of motor_task */
-  motor_taskHandle = osThreadNew(motor_task_entry, NULL, &motor_task_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -176,41 +175,40 @@ void StartDefaultTask(void *argument)
   /* USER CODE END StartDefaultTask */
 }
 
-/* USER CODE BEGIN Header_state_task_entry */
+/* USER CODE BEGIN Header_motor_task_entry */
 /**
-* @brief Function implementing the state_task thread.
+* @brief Function implementing the motor_task thread.
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_state_task_entry */
-void state_task_entry(void *argument)
+/* USER CODE END Header_motor_task_entry */
+void motor_task_entry(void *argument)
 {
-  /* USER CODE BEGIN state_task_entry */
+  /* USER CODE BEGIN motor_task_entry */
   /* Infinite loop */
   for(;;)
   {
     osDelay(1);
   }
-  /* USER CODE END state_task_entry */
+  /* USER CODE END motor_task_entry */
 }
 
-/* USER CODE BEGIN Header_seed_task_entry */
+/* USER CODE BEGIN Header_plant_task_entry */
 /**
-* @brief Function implementing the seed_task thread.
+* @brief Function implementing the plant_task thread.
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_seed_task_entry */
-void seed_task_entry(void *argument)
+/* USER CODE END Header_plant_task_entry */
+void plant_task_entry(void *argument)
 {
-  /* USER CODE BEGIN seed_task_entry */
+  /* USER CODE BEGIN plant_task_entry */
   /* Infinite loop */
   for(;;)
   {
-    plant_task();
     osDelay(1);
   }
-  /* USER CODE END seed_task_entry */
+  /* USER CODE END plant_task_entry */
 }
 
 /* USER CODE BEGIN Header_launch_task_entry */
@@ -226,29 +224,9 @@ void launch_task_entry(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    launch_task();
     osDelay(1);
   }
   /* USER CODE END launch_task_entry */
-}
-
-/* USER CODE BEGIN Header_motor_task_entry */
-/**
-* @brief Function implementing the motor_task thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_motor_task_entry */
-void motor_task_entry(void *argument)
-{
-  /* USER CODE BEGIN motor_task_entry */
-  /* Infinite loop */
-  for(;;)
-  {
-    
-    osDelay(1);
-  }
-  /* USER CODE END motor_task_entry */
 }
 
 /* Private application code --------------------------------------------------*/

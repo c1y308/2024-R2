@@ -56,10 +56,10 @@ extern float RUN_S;
 #define PUT_ANGLE_SINGLE  0//
 
 
-#define CHECK_TICK_SMALL 1
-#define CHECK_TICK_BIG 20
-#define CHASSIS_TOL_SMALL 9
-#define CHASSIS_TOL_BIG 15
+/* 地盘到位确认参数 */
+#define CHASSIS_CHECK_TICK 10
+#define CHASSIS_TOL   9
+#define CHASSIS_TOL_Z 1
 
 extern float crack_posY;//Y
 extern float seed_pos_x[12];//X 
