@@ -23,7 +23,7 @@ static LaunchConfirm_e get_launch_confirm_state(LaunchInfo_t *launch_info)
 }
 
 
-void launch_task(LaunchInfo_t *launch_info, Robotinfo_t *robot_info)
+void launch_task(LaunchInfo_t *launch_info, ChassisInfo_t *robot_info)
 {
     /* 设置磁铁的 GPIO, 关闭磁铁 */
  	static uint8_t gpio_safe_flag = 1;

@@ -147,7 +147,7 @@ typedef struct
 	float check_flag_2;
 	float check_flag_3;
 	
-}Robotinfo_t;
+}ChassisInfo_t;
 
 extern int8_t sign_t;
 extern osMessageQueueId_t chassis_cmd_queueHandle;

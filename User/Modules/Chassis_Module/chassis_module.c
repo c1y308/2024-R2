@@ -6,7 +6,7 @@ float controller_vx;
 float controller_vy;
 float controller_wz;
 
-Robotinfo_t robot_info;
+ChassisInfo_t chassis_info;
 
 int8_t sign_t = 1;
 
@@ -117,17 +117,17 @@ void All_Init()
 	
 	// sign_t = 1;
 	
-	// robot_info.protect_flag = 1;
-	// robot_info.disable_rotation_flag = 0;
+	// chassis_info.protect_flag = 1;
+	// chassis_info.disable_rotation_flag = 0;
 	
-	robot_info.sac = 0;
-	robot_info.limit_vy_flag = 0;
-	robot_info.red_single_flag = robot_info.blue_single_flag = 0;
-	robot_info.init_tick = 0;
+	chassis_info.sac = 0;
+	chassis_info.limit_vy_flag = 0;
+	chassis_info.red_single_flag = chassis_info.blue_single_flag = 0;
+	chassis_info.init_tick = 0;
 
 
-	robot_info.task_type = TASK_TYPE_CHASSIS_INIT;
-	robot_info.tol_state = CHASSIS_MODE_TOL_SMALL;
+	chassis_info.task_type = TASK_TYPE_CHASSIS_INIT;
+	chassis_info.tol_state = CHASSIS_MODE_TOL_SMALL;
 	// UART_DMA_Recevie_init(&huart1,buffer_receve_1,100); 
 	// UART_DMA_Recevie_init(&huart2,buffer_receve_2,100);
 	// UART_DMA_Recevie_init(&huart3,buffer_receve_3,100);
@@ -137,54 +137,54 @@ void All_Init()
 
 void Chassis_Callback()
 {
-	chassis_feedback_update(&robot_info);
+	chassis_feedback_update(&chassis_info);
 	// Calc_Send_Task();
 }
 
 
 /* 底盘反馈更新:获取当前底盘速度和位置，更新位置/角度的误差信息 */
-void chassis_feedback_update(Robotinfo_t *robot_info)
+void chassis_feedback_update(ChassisInfo_t *chassis_info)
 {
-	robot_info->speed_now.vx = (motor_lf->measure.speed_rpm + motor_lb->measure.speed_rpm) / 2;
-	robot_info->speed_now.vy = (motor_lf->measure.speed_rpm - motor_lb->measure.speed_rpm) / 2;
-	robot_info->speed_now.wz = Code_Disc_robot.pal_yaw_rad;
+	chassis_info->speed_now.vx = (motor_lf->measure.speed_rpm + motor_lb->measure.speed_rpm) / 2;
+	chassis_info->speed_now.vy = (motor_lf->measure.speed_rpm - motor_lb->measure.speed_rpm) / 2;
+	chassis_info->speed_now.wz = Code_Disc_robot.pal_yaw_rad;
 	
-	robot_info->pos_now.pos_x = - Code_Disc_robot.x;
-	robot_info->pos_now.pos_y = - Code_Disc_robot.y;
-	robot_info->pos_now.pos_z =   Code_Disc_robot.yaw_rad * RADIAN_TO_ANGLE;	
+	chassis_info->pos_now.pos_x = - Code_Disc_robot.x;
+	chassis_info->pos_now.pos_y = - Code_Disc_robot.y;
+	chassis_info->pos_now.pos_z =   Code_Disc_robot.yaw_rad * RADIAN_TO_ANGLE;	
 
-	robot_info->pos_error.ErrorposX_temp = robot_info->pos_now.pos_x - robot_info->pos_target.pos_x;
-	robot_info->pos_error.ErrorposY_temp = robot_info->pos_now.pos_y - robot_info->pos_target.pos_y;
+	chassis_info->pos_error.ErrorposX_temp = chassis_info->pos_now.pos_x - chassis_info->pos_target.pos_x;
+	chassis_info->pos_error.ErrorposY_temp = chassis_info->pos_now.pos_y - chassis_info->pos_target.pos_y;
 	
-	robot_info->pos_error.ErrorposX = cos(  robot_info->pos_now.pos_z * ANG2RAD) * \
-	robot_info->pos_error.ErrorposX_temp - sin(- robot_info->pos_now.pos_z * ANG2RAD) * robot_info->pos_error.ErrorposY_temp;
+	chassis_info->pos_error.ErrorposX = cos(  chassis_info->pos_now.pos_z * ANG2RAD) * \
+	chassis_info->pos_error.ErrorposX_temp - sin(- chassis_info->pos_now.pos_z * ANG2RAD) * chassis_info->pos_error.ErrorposY_temp;
 
-	robot_info->pos_error.ErrorposY = sin(- robot_info->pos_now.pos_z * ANG2RAD) * \
-	robot_info->pos_error.ErrorposX_temp + cos(  robot_info->pos_now.pos_z * ANG2RAD) * robot_info->pos_error.ErrorposY_temp;
+	chassis_info->pos_error.ErrorposY = sin(- chassis_info->pos_now.pos_z * ANG2RAD) * \
+	chassis_info->pos_error.ErrorposX_temp + cos(  chassis_info->pos_now.pos_z * ANG2RAD) * chassis_info->pos_error.ErrorposY_temp;
 
-	robot_info->pos_error.ErrorposZ = robot_info->pos_now.pos_z - robot_info->pos_target.pos_z;
+	chassis_info->pos_error.ErrorposZ = chassis_info->pos_now.pos_z - chassis_info->pos_target.pos_z;
 }
 
 
 void chassis_task_entry(void *argument)
 {
-	Robotinfo_t *robot_info = (Robotinfo_t *)argument;
+	ChassisInfo_t *chassis_info = (ChassisInfo_t *)argument;
     ChassisCmd_t rx_cmd;
     static uint16_t arrive_tick = 0;
     while(1)
     {
         // 1. 接收队列
         if (xQueueReceive(chassis_cmd_queueHandle, &rx_cmd, 0) == pdPASS) {
-            robot_info->cmd_seq_id = rx_cmd.cmd_seq_id;
-            robot_info->pos_target = rx_cmd.pos_target;
-            robot_info->speed_target = rx_cmd.speed_target;
-			robot_info->mode_x = rx_cmd.mode_x;
-			robot_info->mode_y = rx_cmd.mode_y;
-			robot_info->mode_z = rx_cmd.mode_z;
+            chassis_info->cmd_seq_id = rx_cmd.cmd_seq_id;
+            chassis_info->pos_target = rx_cmd.pos_target;
+            chassis_info->speed_target = rx_cmd.speed_target;
+			chassis_info->mode_x = rx_cmd.mode_x;
+			chassis_info->mode_y = rx_cmd.mode_y;
+			chassis_info->mode_z = rx_cmd.mode_z;
         }
 
         // 2. 传感器反馈更新 (获取 pos_now 和 speed_now)
-        chassis_feedback_update(robot_info);
+        chassis_feedback_update(chassis_info);
 
         // ========================================================
         // 3. 核心精髓：三轴解耦计算 (各自算各自的，互不干扰)
@@ -192,50 +192,50 @@ void chassis_task_entry(void *argument)
 
         // ---- X 轴处理 ----
         if (rx_cmd.mode_x == AXIS_MODE_POS) {
-            PID_calc(&pid_DJI_outer[0], robot_info->pos_error.ErrorposX, 0);
+            PID_calc(&pid_DJI_outer[0], chassis_info->pos_error.ErrorposX, 0);
 			first_order_filter_cali(&filter_chassis_vx, pid_DJI_outer[0].out);
 			if (fabs(pid_DJI_outer[0].out) <= fabs(filter_chassis_vx.out))
-		  		robot_info->speed_target.vx = pid_DJI_outer[0].out;
+		  		chassis_info->speed_target.vx = pid_DJI_outer[0].out;
 			else  
-				robot_info->speed_target.vx = filter_chassis_vx.out;
+				chassis_info->speed_target.vx = filter_chassis_vx.out;
         } 
         else if (rx_cmd.mode_x == AXIS_MODE_VEL) {
-            robot_info->speed_target.vx = rx_cmd.speed_target.vx; // 纯速度模式直通
+            chassis_info->speed_target.vx = rx_cmd.speed_target.vx; // 纯速度模式直通
         } 
         else {
-            robot_info->speed_target.vx = 0; // STOP
+            chassis_info->speed_target.vx = 0; // STOP
         }
 
         // ---- Y 轴处理 ----
         if (rx_cmd.mode_y == AXIS_MODE_POS) {
-            PID_calc(&pid_DJI_outer[1], robot_info->pos_error.ErrorposY, 0);
+            PID_calc(&pid_DJI_outer[1], chassis_info->pos_error.ErrorposY, 0);
 			first_order_filter_cali(&filter_chassis_vy, pid_DJI_outer[1].out);
 			if (fabs(pid_DJI_outer[1].out) <= fabs(filter_chassis_vy.out))
-		  		robot_info->speed_target.vy = pid_DJI_outer[1].out;
+		  		chassis_info->speed_target.vy = pid_DJI_outer[1].out;
 			else  
-				robot_info->speed_target.vy = filter_chassis_vy.out;
+				chassis_info->speed_target.vy = filter_chassis_vy.out;
         } 
         else if (rx_cmd.mode_y == AXIS_MODE_VEL) {
-            robot_info->speed_target.vy = rx_cmd.speed_target.vy;
+            chassis_info->speed_target.vy = rx_cmd.speed_target.vy;
         } 
         else {
-            robot_info->speed_target.vy = 0;
+            chassis_info->speed_target.vy = 0;
         }
 
         // ---- Z 轴 (Yaw) 处理 ----
         if (rx_cmd.mode_z == AXIS_MODE_POS) {
-			PID_calc(&pid_DJI_outer[2], robot_info->pos_error.ErrorposZ, 0);
+			PID_calc(&pid_DJI_outer[2], chassis_info->pos_error.ErrorposZ, 0);
 
-			if(robot_info->pos_error.ErrorposZ > 180)
-				robot_info->speed_target.wz =   pid_DJI_outer[2].out;
+			if(chassis_info->pos_error.ErrorposZ > 180)
+				chassis_info->speed_target.wz =   pid_DJI_outer[2].out;
 			else
-				robot_info->speed_target.wz = - pid_DJI_outer[2].out;
+				chassis_info->speed_target.wz = - pid_DJI_outer[2].out;
         } 
         else if (rx_cmd.mode_z == AXIS_MODE_VEL) {
-            robot_info->speed_target.wz = rx_cmd.speed_target.wz;
+            chassis_info->speed_target.wz = rx_cmd.speed_target.wz;
         } 
         else {
-            robot_info->speed_target.wz = 0;
+            chassis_info->speed_target.wz = 0;
         }
 
         // ========================================================
@@ -244,21 +244,21 @@ void chassis_task_entry(void *argument)
         // 只有配置为 POS 的轴，才参与到位判断！如果某轴是 VEL，说明它不需要“到达”
 
 
-        bool x_arrived = (rx_cmd.mode_x != AXIS_MODE_POS) || (fabs(robot_info->pos_error.ErrorposX) < CHASSIS_TOL);
-        bool y_arrived = (rx_cmd.mode_y != AXIS_MODE_POS) || (fabs(robot_info->pos_error.ErrorposY) < CHASSIS_TOL);
-        bool z_arrived = (rx_cmd.mode_z != AXIS_MODE_POS) || (fabs(robot_info->pos_error.ErrorposZ) < CHASSIS_TOL_Z);
+        bool x_arrived = (rx_cmd.mode_x != AXIS_MODE_POS) || (fabs(chassis_info->pos_error.ErrorposX) < CHASSIS_TOL);
+        bool y_arrived = (rx_cmd.mode_y != AXIS_MODE_POS) || (fabs(chassis_info->pos_error.ErrorposY) < CHASSIS_TOL);
+        bool z_arrived = (rx_cmd.mode_z != AXIS_MODE_POS) || (fabs(chassis_info->pos_error.ErrorposZ) < CHASSIS_TOL_Z);
 
         if (x_arrived && y_arrived && z_arrived) {
             arrive_tick++;
             if (arrive_tick >= CHASSIS_CHECK_TICK) {
-                robot_info->arrived_seq_id = robot_info->cmd_seq_id; // 同步 ID，通告上层任务
+                chassis_info->arrived_seq_id = chassis_info->cmd_seq_id; // 同步 ID，通告上层任务
             }
         } else {
             arrive_tick = 0;
         }
 
         // 5. 最终运动学逆解 (输出到电机)
-        cal_chassis_speed_2_motor(robot_info);
+        cal_chassis_speed_2_motor(chassis_info);
         
         vTaskDelay(5);
     }
@@ -266,12 +266,12 @@ void chassis_task_entry(void *argument)
 
 
 /* 进行地盘速度环计算，得到目标电机速度 */
-void cal_chassis_speed_2_motor(Robotinfo_t *robot_info)
+void cal_chassis_speed_2_motor(ChassisInfo_t *chassis_info)
 {
-	dji_motor_setref(motor_lf, (+robot_info->speed_target.vy + robot_info->speed_target.vx + robot_info->speed_target.wz));
-	dji_motor_setref(motor_lb, (-robot_info->speed_target.vy + robot_info->speed_target.vx + robot_info->speed_target.wz));
-	dji_motor_setref(motor_rb, (+robot_info->speed_target.vy - robot_info->speed_target.vx + robot_info->speed_target.wz));
-	dji_motor_setref(motor_rf, (-robot_info->speed_target.vy - robot_info->speed_target.vx + robot_info->speed_target.wz));
+	dji_motor_setref(motor_lf, (+chassis_info->speed_target.vy + chassis_info->speed_target.vx + chassis_info->speed_target.wz));
+	dji_motor_setref(motor_lb, (-chassis_info->speed_target.vy + chassis_info->speed_target.vx + chassis_info->speed_target.wz));
+	dji_motor_setref(motor_rb, (+chassis_info->speed_target.vy - chassis_info->speed_target.vx + chassis_info->speed_target.wz));
+	dji_motor_setref(motor_rf, (-chassis_info->speed_target.vy - chassis_info->speed_target.vx + chassis_info->speed_target.wz));
 }
 
 
@@ -283,9 +283,9 @@ void Filter_Init_All(void)
 }
 
 
-// void stop_chassis(Robotinfo_t *robot_info)
+// void stop_chassis(ChassisInfo_t *chassis_info)
 // {
-//    robot_info->chassis_state = CHASSIS_MODE_STOP;
-//    robot_info->speed_target.vx = robot_info->speed_target.vy = robot_info->speed_target.wz = 0;
+//    chassis_info->chassis_state = CHASSIS_MODE_STOP;
+//    chassis_info->speed_target.vx = chassis_info->speed_target.vy = chassis_info->speed_target.wz = 0;
 // }
 

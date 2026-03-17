@@ -94,7 +94,7 @@ void grap_init(grap_t *grap_ifo)
 
 
 /*  设置所有抓取电机速度为0 */
-void set_grap_motor_zero_speed()
+static void set_grap_motor_zero_speed()
 {
 	static uint8_t clear_pid_flag = 1;
 	if(clear_pid_flag == 1)

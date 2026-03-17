@@ -55,19 +55,11 @@ extern DjiMotorHandle_t *motor_yaw_left, *motor_yaw_right, *motor_lift_left, *mo
 
 
 extern grap_t grap_ifo;
-bool check_grap_arrive(grap_t *grap_ifo);
-void grap_motor_init(void);
-void grap_init(grap_t *grap_ifo);
-void grap_seed(grap_t *grap_ifo);
+
+void grap_seed_store(grap_t *grap_ifo);
 void grap_seed(grap_t *grap_ifo);
 void preput_seed(grap_t *grap_ifo);
 void put_seed(grap_t *grap_ifo);
-
-
-void out_only(void);
-void grap_only(void);
-void set_grap_motor_zero_speed(void);
-
 
 
 #endif

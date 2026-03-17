@@ -73,6 +73,6 @@ typedef enum
     BALL_STATE_LINE_CHANGE_SINGLE_3,
 }BALLState_e;
 
-void launch_task(LaunchInfo_t *launch_info, Robotinfo_t *robot_info);
+void launch_task(LaunchInfo_t *launch_info, ChassisInfo_t *robot_info);
 
 #endif

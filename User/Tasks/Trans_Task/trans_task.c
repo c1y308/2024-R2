@@ -1,13 +1,13 @@
 #include "trans_task.h"
 TransIfo_t trans_ifo;
 
-void init_transition_task(Robotifo_t *robot_ifo, TransIfo_t *trans_ifo){
+void init_transition_task(Robotinfo_t *robot_ifo, TransIfo_t *trans_ifo){
      trans_ifo->trans_state = TRANS_STATE_IDLE;
      trans_ifo->run_tick = 0;
 }
 
 
-void start_transition_task(Robotifo_t *robot_ifo, TransIfo_t *trans_ifo)
+void start_transition_task(Robotinfo_t *robot_ifo, TransIfo_t *trans_ifo)
 {
     robot_ifo->task_type = TASK_TYPE_TRANSITION;
     trans_ifo->trans_state = TRANS_STATE_F;
@@ -15,7 +15,7 @@ void start_transition_task(Robotifo_t *robot_ifo, TransIfo_t *trans_ifo)
 }
 
 
-void transition_task(Robotifo_t *robot_ifo, TransIfo_t *trans_ifo)
+void transition_task(Robotinfo_t *robot_ifo, TransIfo_t *trans_ifo)
 {
   switch(trans_ifo->trans_state)
 	{

@@ -1,8 +1,10 @@
 #ifndef __TRANS_TASK_H__
 #define __TRANS_TASK_H__
+
 #include "chassis_module.h"
 #include "grap_module.h"
 #include "usart.h"
+
 typedef enum{
     TRANS_STATE_IDLE,
 	TRANS_STATE_F,
@@ -20,6 +22,6 @@ typedef struct{
 extern TransIfo_t trans_ifo;
 
 
-void init_transition_task(Robotifo_t *robot_ifo, TransIfo_t *trans_ifo);
-void start_transition_task(Robotifo_t *robot_ifo, TransIfo_t *trans_ifo);
+void init_transition_task(Robotinfo_t *robot_ifo, TransIfo_t *trans_ifo);
+void start_transition_task(Robotinfo_t *robot_ifo, TransIfo_t *trans_ifo);
 #endif
