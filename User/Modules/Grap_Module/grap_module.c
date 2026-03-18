@@ -55,14 +55,7 @@ bool check_grap_arrive(grap_t *grap_ifo){
 }
 
 
-void grap_init(grap_t *grap_ifo)
-{   
-    grap_ifo->grap_state = GARP_STATE_INIT;
-    grap_ifo->grap_last_state = GARP_STATE_IDLE;
-	grap_ifo->grap_arrive = 0;
-
-
-	grap_ifo->grap_tick++;
+static void init_grap_motor(){
 	dji_motor_setref(motor_yaw_left, - GRAP_ANGLE_SPEED);
 	dji_motor_setref(motor_yaw_right,  GRAP_ANGLE_SPEED);
 
@@ -71,19 +64,21 @@ void grap_init(grap_t *grap_ifo)
 	
 	dji_motor_setref(motor_grap_left,    SAFE_GRAP_SPEED);
 	dji_motor_setref(motor_grap_right, - SAFE_GRAP_SPEED);
+}
 
-	if(grap_ifo->grap_tick >= 150)
-	{
-		dji_motor_setref(motor_yaw_left, - LOW_ANGLE_SPEED);
-		dji_motor_setref(motor_yaw_right,  LOW_ANGLE_SPEED);
 
-		dji_motor_setref(motor_lift_left,  - GRAP_LIFT_SPEED);
-		dji_motor_setref(motor_lift_right,   GRAP_LIFT_SPEED);
-		
-		dji_motor_setref(motor_grap_left,    GRAP_SPEED_OPEN);
-		dji_motor_setref(motor_grap_right, - GRAP_SPEED_OPEN);
-	}
-	else if(grap_ifo->grap_tick >= 300){
+void grap_init(grap_t *grap_ifo)
+{   
+    grap_ifo->grap_state = GARP_STATE_INIT;
+    grap_ifo->grap_last_state = GARP_STATE_IDLE;
+	grap_ifo->grap_arrive = 0;
+
+
+	grap_ifo->grap_tick++;
+
+	init_grap_motor();
+
+	if(grap_ifo->grap_tick >= 300){
 		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_RESET);
 		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_RESET);
 		set_grap_motor_zero_speed();
@@ -119,31 +114,70 @@ static void set_grap_motor_zero_speed()
 }
 
 
-void grap_seed_store(grap_t *grap_ifo){
-	grap_ifo->grap_state = GRAP_STATE_START_STORAGE;
+void grap_seed_store(){
+	// grap_ifo->grap_state = GRAP_STATE_START_STORAGE;
+
+	GrapCommand_e cmd = CMD_SEED_STORE;
+    xQueueSend(grap_cmd_queueHandle, &cmd, 0); 
 }
 
 
-void grap_seed(grap_t *grap_ifo){
-	grap_ifo->grap_state = GRAP_STATE_GRAP;
+void grap_seed(){
+	// grap_ifo->grap_state = GRAP_STATE_GRAP;
+
+	GrapCommand_e cmd = CMD_SEED_GRAP;
+    xQueueSend(grap_cmd_queueHandle, &cmd, 0);
 }
 
 
-void preput_seed(grap_t *grap_ifo){
-	grap_ifo->grap_state = GRAP_STATE_PRE_PUT;
+void preput_seed(){
+	// grap_ifo->grap_state = GRAP_STATE_PRE_PUT;
+
+	GrapCommand_e cmd = CMD_SEED_PREPUT;
+    xQueueSend(grap_cmd_queueHandle, &cmd, 0);
 }
 
 
-void put_seed(grap_t *grap_ifo){
-	grap_ifo->grap_state = GRAP_STATE_WAIT_AND_PUT;
+void put_seed(){
+	// grap_ifo->grap_state = GRAP_STATE_WAIT_AND_PUT;
+
+	GrapCommand_e cmd = CMD_SEED_PUT;
+    xQueueSend(grap_cmd_queueHandle, &cmd, 0);
 }
 
 
 void grap_task(grap_t *grap_ifo){
+
+	GrapCommand_e cmd;
+
 	switch (grap_ifo->grap_state)
 	{
 		case GARP_STATE_IDLE:{
-			grap_ifo->grap_tick = 0;
+			set_grap_motor_zero_speed();
+
+			if (xQueueReceive(grap_cmd_queueHandle, &cmd, 0) == pdPASS) {
+				// 根据指令进入不同的起始状态
+				switch(cmd) {
+				case CMD_SEED_STORE:{
+					grap_ifo->grap_state = GRAP_STATE_START_STORAGE;
+					break;
+				}
+				case CMD_SEED_GRAP:{
+					grap_ifo->grap_state = GRAP_STATE_GRAP;
+					break;
+				}
+				case CMD_SEED_PREPUT:{
+					grap_ifo->grap_state = GRAP_STATE_PRE_PUT;
+					break;
+				}
+				case CMD_SEED_PUT:{
+					grap_ifo->grap_state = GRAP_STATE_WAIT_AND_PUT;
+					break;
+				}
+				default:
+					break;
+				}
+			}
 			break;
 		}
 
@@ -176,26 +210,31 @@ void grap_task(grap_t *grap_ifo){
 		}
 		/*************************************一共七个状态****************************************************/
 		case GRAP_STATE_START_STORAGE:{  // 进入把场地上的苗抓取并存储状态
-                grap_ifo->grap_last_state = GRAP_STATE_START_STORAGE;
-				grap_ifo->grap_state = GRAP_STATE_GRAP;
+            grap_ifo->grap_last_state = GRAP_STATE_START_STORAGE;
+			grap_ifo->grap_state = GRAP_STATE_GRAP;
 			break;
 		}
 
 		case GRAP_STATE_GRAP:{  // 抓取苗
 			if(grap_ifo->grap_tick >= GRAP_TICK_CLOSE)
-			{
-                if(grap_ifo->grap_last_state == GRAP_STATE_START_STORAGE){  // 抓取完毕需要把苗存储在车上
-                    grap_ifo->grap_state = GRAP_STATE_PRELIFT;
-                }
-                else if(grap_ifo->grap_last_state == GRAP_STATE_BACK2WAIT){  // 抓取完毕直接抬升准备种植
-                    grap_ifo->grap_state = GARP_STATE_LIFT;
-                }
-                else if(grap_ifo->grap_last_state == GRAP_STATE_PUT_ROTATE){  // 抓取存储在车上的苗准备种植
-                    grap_ifo->grap_state = GRAP_STATE_PUT_ROTATEBACK;
-                }
-				else if(grap_ifo->grap_last_state == GARP_STATE_IDLE)
-					grap_ifo->grap_state = GRAP_STATE_PUT_ROTATEBACK;
-					
+			{	
+				switch(grap_ifo->grap_last_state){
+					/* 当上次状态是空闲状态时，抓取苗后需要先旋转180度后再把苗存储在车上 */
+					case GARP_STATE_IDLE:
+						grap_ifo->grap_state = GRAP_STATE_PUT_ROTATEBACK;
+						break;
+					/* 当上次状态是首次抓苗并存储状态时，抓取苗后需要先预抬升 */
+					case GRAP_STATE_START_STORAGE:
+						grap_ifo->grap_state = GRAP_STATE_PRELIFT;
+						break;
+					case GRAP_STATE_BACK2WAIT:
+						grap_ifo->grap_state = GARP_STATE_LIFT;
+					case GRAP_STATE_PUT_ROTATE:
+						grap_ifo->grap_state = GRAP_STATE_PUT_ROTATEBACK;
+					default:
+						break;
+				}		
+
                 grap_ifo->grap_last_state = GRAP_STATE_GRAP;
                 grap_ifo->grap_tick = 0;
 			}else{
@@ -306,7 +345,7 @@ void grap_task(grap_t *grap_ifo){
 				grap_ifo->grap_arrive = 1;  // 划重点
 				grap_ifo->grap_tick = 0;
                 grap_ifo->grap_last_state = GRAP_STATE_BACK2WAIT;
-				grap_ifo->grap_state = GARP_STATE_IDLE;
+				grap_ifo->grap_state = 		GARP_STATE_IDLE;
 			}
 			else
 			{
@@ -364,6 +403,7 @@ void grap_task(grap_t *grap_ifo){
 				grap_ifo->grap_state = GRAP_STATE_PUT_ROTATE;
                 grap_ifo->grap_last_state = GRAP_STATE_PRE_PUT;
 			}
+			break;
 		}
 
 		case GRAP_STATE_PUT_ROTATE:{
@@ -385,6 +425,7 @@ void grap_task(grap_t *grap_ifo){
 					dji_motor_setref(motor_lift_right, - SPEED_LIFT_PLUS  + 0.4);		
 				}
 			}
+			break;
 		}
 
 		case GRAP_STATE_PUT_ROTATEBACK:{
@@ -418,6 +459,7 @@ void grap_task(grap_t *grap_ifo){
 					dji_motor_setref(motor_grap_right,  - GRAP_SPEED);	
 				}
 			}
+			break;
 		}
 
         case GRAP_STATE_WAIT_AND_PUT:{
@@ -456,6 +498,10 @@ void out_only()
 	dji_motor_setref(motor_lift_right, 0);
 	dji_motor_setref(motor_grap_right, - GRAP_SPEED_OPEN);
 }
+
+
+
+
 
 
 // void Grapping_Callback()

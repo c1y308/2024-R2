@@ -45,23 +45,21 @@ typedef enum{
 typedef struct
 {
 	SeedState_e seed_state;
-	uint16_t run_tick;
 
-	uint8_t  pos_index;
+	uint8_t  	pos_index;
 
-	uint8_t  move_count;
-	uint8_t  grap_count;
-	uint8_t  putm_count;
-	uint8_t   put_count;
-
-	uint8_t seed_ok;
+	uint8_t  	move_count;
+	uint8_t  	grap_count;
+	uint8_t  	putm_count;
+	uint8_t  	put_count;
 }SeedInfo_t;
 
 
 extern SeedInfo_t seed_info;
+extern osEventFlagsId_t motion_arrive_eventHandle;
 
 void seedtask_init(SeedInfo_t *seed_info);
-void plant_task(SeedInfo_t *seed_info, grap_t *grap_info);
+void plant_task(SeedInfo_t *seed_info);
 
 void GP_Task_Single(void);
 void Ball_Task_Single(void);

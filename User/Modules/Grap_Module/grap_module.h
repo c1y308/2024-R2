@@ -4,6 +4,20 @@
 #include "dji_motor.h"
 #include "user_config.h"
 #include <stdbool.h>
+#include "cmsis_os2.h"
+
+#define EVENT_GRAP_ARRIVE        (1 << 1)  // 爪子到达目标位置
+#define EVENT_GRAP_HALF_READY    (1 << 2)  // 爪子准备好放置
+
+
+typedef enum {
+    CMD_NONE = 0,
+    CMD_SEED_STORE,     // 抓取并存储
+    CMD_SEED_GRAP,      // 仅抓取
+    CMD_SEED_PREPUT,    // 预放苗
+    CMD_SEED_PUT        // 放苗
+} GrapCommand_e;
+
 
 typedef enum{
 	GARP_STATE_IDLE = 0,
@@ -55,11 +69,13 @@ extern DjiMotorHandle_t *motor_yaw_left, *motor_yaw_right, *motor_lift_left, *mo
 
 
 extern grap_t grap_ifo;
+extern osMessageQueueId_t grap_cmd_queueHandle;
 
-void grap_seed_store(grap_t *grap_ifo);
-void grap_seed(grap_t *grap_ifo);
-void preput_seed(grap_t *grap_ifo);
-void put_seed(grap_t *grap_ifo);
+void grap_seed_store();
+void grap_seed();
+void preput_seed();
+void put_seed();
+// grap_init
 
 
 #endif

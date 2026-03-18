@@ -26,6 +26,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "chassis_module.h"
+#include "grap_module.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -87,6 +88,16 @@ osMessageQueueId_t chassis_cmd_queueHandle;
 const osMessageQueueAttr_t chassis_cmd_queue_attributes = {
   .name = "chassis_cmd_queue"
 };
+/* Definitions for grap_cmd_queue */
+osMessageQueueId_t grap_cmd_queueHandle;
+const osMessageQueueAttr_t grap_cmd_queue_attributes = {
+  .name = "grap_cmd_queue"
+};
+/* Definitions for motion_arrive_event */
+osEventFlagsId_t motion_arrive_eventHandle;
+const osEventFlagsAttr_t motion_arrive_event_attributes = {
+  .name = "motion_arrive_event"
+};
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -127,6 +138,9 @@ void MX_FREERTOS_Init(void) {
   /* creation of chassis_cmd_queue */
   chassis_cmd_queueHandle = osMessageQueueNew (16, sizeof(ChassisCmd_t), &chassis_cmd_queue_attributes);
 
+  /* creation of grap_cmd_queue */
+  grap_cmd_queueHandle = osMessageQueueNew (16, sizeof(GrapCommand_e), &grap_cmd_queue_attributes);
+
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
   /* USER CODE END RTOS_QUEUES */
@@ -150,6 +164,10 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
+
+  /* Create the event(s) */
+  /* creation of motion_arrive_event */
+  motion_arrive_eventHandle = osEventFlagsNew(&motion_arrive_event_attributes);
 
   /* USER CODE BEGIN RTOS_EVENTS */
   /* add events, ... */

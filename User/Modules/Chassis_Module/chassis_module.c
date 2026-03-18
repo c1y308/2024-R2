@@ -2,11 +2,8 @@
 #include "Code_Disc.h"
 #include "NRF24L01.h"
 #include "dji_motor.h"
-float controller_vx;
-float controller_vy;
-float controller_wz;
-
 ChassisInfo_t chassis_info;
+
 
 int8_t sign_t = 1;
 
@@ -119,8 +116,6 @@ void All_Init()
 	
 	// chassis_info.protect_flag = 1;
 	// chassis_info.disable_rotation_flag = 0;
-	
-	chassis_info.sac = 0;
 	chassis_info.limit_vy_flag = 0;
 	chassis_info.red_single_flag = chassis_info.blue_single_flag = 0;
 	chassis_info.init_tick = 0;
@@ -165,11 +160,11 @@ void chassis_feedback_update(ChassisInfo_t *chassis_info)
 	chassis_info->pos_error.ErrorposZ = chassis_info->pos_now.pos_z - chassis_info->pos_target.pos_z;
 }
 
-
+// 还需要再拆分，当前设计如果没有收到指令，此任务会陷入阻塞态，不会执行 PID 计算
 void chassis_task_entry(void *argument)
 {
 	ChassisInfo_t *chassis_info = (ChassisInfo_t *)argument;
-    ChassisCmd_t rx_cmd;
+    ChassisCmd_t rx_cmd = {0};
     static uint16_t arrive_tick = 0;
     while(1)
     {
@@ -283,9 +278,18 @@ void Filter_Init_All(void)
 }
 
 
-// void stop_chassis(ChassisInfo_t *chassis_info)
-// {
-//    chassis_info->chassis_state = CHASSIS_MODE_STOP;
-//    chassis_info->speed_target.vx = chassis_info->speed_target.vy = chassis_info->speed_target.wz = 0;
-// }
+void stop_chassis()
+{
+    ChassisCmd_t chassis_cmd;
+    chassis_cmd.speed_target.vx = 0;
+    chassis_cmd.speed_target.vy = 0;
+    chassis_cmd.speed_target.wz = 0;
+
+    chassis_cmd.mode_x = AXIS_MODE_VEL;
+    chassis_cmd.mode_y = AXIS_MODE_VEL;
+    chassis_cmd.mode_z = AXIS_MODE_VEL;
+
+   
+    osMessageQueuePut(chassis_cmd_queueHandle, &chassis_cmd, 0, 0);
+}
 

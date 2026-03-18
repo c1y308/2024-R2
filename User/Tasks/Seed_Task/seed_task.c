@@ -1,6 +1,5 @@
 #include "seed_task.h"
 
-
 SeedInfo_t seed_info;
 float speed_move_seed = -2;
 
@@ -43,7 +42,6 @@ static PutParity_e get_put_parity(SeedInfo_t *seed_info){
 void seedtask_init(SeedInfo_t *seed_info)
 {
   	seed_info->seed_state = SEED_STATE_INIT;//transition_f
-	seed_info->run_tick   = 0;
 	seed_info->pos_index  = 0;
 	seed_info->move_count = 0;
 	seed_info->grap_count = 0;
@@ -52,232 +50,188 @@ void seedtask_init(SeedInfo_t *seed_info)
 
 
 /* 调用地盘module 和 爪子module 的相关API 来完成种植任务，主要进行逻辑实现 */
-void plant_task(SeedInfo_t *seed_info, grap_t *grap_info)
+void plant_task(SeedInfo_t *seed_info)
 {
   	switch(seed_info->seed_state)
 	{
 		case SEED_STATE_INIT:
     	{
-			grap_init(grap_info);
-			
-		  	if(seed_info->run_tick <= INIT_OUT_TICK)
-			{
-				/* 通过消息队列给地盘发送速度控制信息 */
-				ChassisCmd_t chassis_cmd;
-				chassis_cmd.speed_target.target_vx = 0;
-				chassis_cmd.speed_target.target_vy = 1;
-				chassis_cmd.speed_target.target_vz = 0;
-				chassis_cmd.mode_x = AXIS_MODE_VEL;
-				chassis_cmd.mode_y = AXIS_MODE_VEL;
-				chassis_cmd.mode_z = AXIS_MODE_VEL;
-				osMessageQueuePut(chassis_cmd_queueHandle, &chassis_cmd, 0, 0);
-			}
-			else{
-				seed_info->run_tick = 0;
-				seed_info->seed_state = SEED_STATE_INIT_2;
-			}
+			// 需要让爪子完成初始化状态
+
+			/* 通过消息队列给地盘发送速度控制信息 */
+			ChassisCmd_t chassis_cmd;
+			chassis_cmd.speed_target.target_vx = 0;
+			chassis_cmd.speed_target.target_vy = 1;
+			chassis_cmd.speed_target.target_vz = 0;
+			chassis_cmd.mode_x = AXIS_MODE_VEL;
+			chassis_cmd.mode_y = AXIS_MODE_VEL;
+			chassis_cmd.mode_z = AXIS_MODE_VEL;
+			osMessageQueuePut(chassis_cmd_queueHandle, &chassis_cmd, 0, 0);
+
+			osDelay(INIT_OUT_TICK);
+
+			seed_info->seed_state = SEED_STATE_INIT_2;
+
 			break;
 		}
 
 		case SEED_STATE_INIT_2:
     	{
+			/* 通过消息队列给地盘发送速度控制信息 */
+			ChassisCmd_t chassis_cmd;
+			chassis_cmd.pos_target.pos_x = sign_t * seed_pos_x[5 - seed_info->pos_index];
+			chassis_cmd.pos_target.pos_y = SEED_FORWARD_DES;
+			chassis_cmd.pos_target.pos_z = 0;
 			
+			chassis_cmd.mode_x = AXIS_MODE_POS;
+			chassis_cmd.mode_y = AXIS_MODE_POS;
+			chassis_cmd.mode_z = AXIS_MODE_POS;
+			osMessageQueuePut(chassis_cmd_queueHandle, &chassis_cmd, 0, 0);
 
-			if(chassis_arrive_check(robot_info) == true)
-			{
-				seed_info->seed_state = SEED_STATE_MOVE_2_GET;
-			}
-			else
-			{
-				/* 通过消息队列给地盘发送速度控制信息 */
-				ChassisCmd_t chassis_cmd;
-				chassis_cmd.pos_target.pos_x = sign_t * seed_pos_x[5 - seed_info->pos_index];
-				chassis_cmd.pos_target.pos_y = SEED_FORWARD_DES;
-				chassis_cmd.pos_target.pos_z = 0;
-				
-				chassis_cmd.mode_x = AXIS_MODE_POS;
-				chassis_cmd.mode_y = AXIS_MODE_POS;
-				chassis_cmd.mode_z = AXIS_MODE_POS;
-				osMessageQueuePut(chassis_cmd_queueHandle, &chassis_cmd, 0, 0);
-			}
+			osEventFlagsWait(motion_arrive_eventHandle, EVENT_CHASSIS_ARRIVE, osFlagsWaitAny, osWaitForever);
+
+			/* 3. 代码能走到这里，说明底盘100%已经到位了，直接切状态 */
+			seed_info->seed_state = SEED_STATE_MOVE_2_GET;
+
 			break;
 		}
 	  	case SEED_STATE_MOVE_2_GET:
     	{
-		    if( (get_chassis_parity(seed_info) == CHASSIS_PARITY_EVEN && chassis_arrive_check(robot_info) == true) ||   // 
-		  	    (get_chassis_parity(seed_info) == CHASSIS_PARITY_ODD  && chassis_arrive_check(robot_info) == true && check_grap_arrive(grap_info) == true) ) 
-			{                           
-				seed_info->move_count++;
-				seed_info->pos_index++;
+			// robot_info->limit_vy_flag = 1;
+			ChassisCmd_t chassis_cmd;
+			chassis_cmd.pos_target.pos_x = sign_t * seed_pos_x[5 - seed_info->pos_index];
+			chassis_cmd.pos_target.pos_y = crack_posY;
+			chassis_cmd.pos_target.pos_z = 0;
+			
+			chassis_cmd.speed_target.target_vy = -1.6;
 
-				seed_info->run_tick = 0;
+			chassis_cmd.mode_x = AXIS_MODE_POS;
+			chassis_cmd.mode_y = AXIS_MODE_VEL;
+			chassis_cmd.mode_z = AXIS_MODE_POS;
+			osMessageQueuePut(chassis_cmd_queueHandle, &chassis_cmd, 0, 0);
 
-				robot_info->limit_vy_flag = 0;
-				seed_info->seed_state = SEED_STATE_GET;
+			if(get_chassis_parity(seed_info) == CHASSIS_PARITY_EVEN){
+				osEventFlagsWait(motion_arrive_eventHandle, EVENT_CHASSIS_ARRIVE, osFlagsWaitAll, osWaitForever);
+			}else if(get_chassis_parity(seed_info) == CHASSIS_PARITY_ODD){
+				uint32_t wait_flags = EVENT_CHASSIS_ARRIVE | EVENT_GRAP_ARRIVE;
+				osEventFlagsWait(motion_arrive_eventHandle, wait_flags, osFlagsWaitAll, osWaitForever);
 			}
-			else
-			{
-				robot_info->limit_vy_flag = 1;
 
-				ChassisCmd_t chassis_cmd;
-				chassis_cmd.pos_target.pos_x = sign_t * seed_pos_x[5 - seed_info->pos_index];
-				chassis_cmd.pos_target.pos_y = crack_posY;
-				chassis_cmd.pos_target.pos_z = 0;
-				
-				chassis_cmd.speed_target.target_vy = -1.6;
+			/* 硬件动作都做完了，更新逻辑状态 */
+			seed_info->move_count++;
+			seed_info->pos_index++;
+			seed_info->seed_state = SEED_STATE_GET;
 
-				chassis_cmd.mode_x = AXIS_MODE_POS;
-				chassis_cmd.mode_y = AXIS_MODE_VEL;
-				chassis_cmd.mode_z = AXIS_MODE_POS;
-				osMessageQueuePut(chassis_cmd_queueHandle, &chassis_cmd, 0, 0);
-
-				seed_info->run_tick++;
-			}
 			break;
 		}
 		case SEED_STATE_GET:
     	{
-			static uint8_t reset_ops9_z = 1;
-			static uint8_t reset_ops9_y = 1;
+			/* 可以添加重置里程计的操作 */
 
-		  	if(	( ( get_grap_parity(seed_info) == GRAP_COUNT_EVEN ) && ( grap_info->ready_2_move == 1 ) ) ||
-			 	( ( get_grap_parity(seed_info) == GRAP_COUNT_ODD )  && ( check_grap_arrive(grap_info) == false  ) )  )
-			{
-				seed_info->grap_count++;
-				reset_ops9_z = 1;
-				reset_ops9_y = 1;
 
-				seed_info->run_tick = 0;
+			stop_chassis();
 
-				if(get_grap_parity(seed_info) == GRAP_COUNT_ODD)
-					seed_info->seed_state = SEED_STATE_MOVE_2_GET;
-				else
-				{
-					grap_info->grap_arrive = 0;
-					dji_motor_setref(motor_lift_left,  0);
-					dji_motor_setref(motor_lift_right, 0);
-					seed_info->seed_state = SEED_STATE_MOVE_2_PUT;
-				}
+			/* 偶数次触发，抓取地面苗并存储在车上 */
+			if(get_grap_parity(seed_info) == GRAP_COUNT_EVEN){
+				grap_seed_store();
+				osEventFlagsWait(motion_arrive_eventHandle, EVENT_GRAP_HALF_READY, osFlagsWaitAny, osWaitForever);
 			}
-			else
-			{
-				if(get_grap_parity(seed_info) == GRAP_COUNT_EVEN)
-					grap_seed_store(grap_info);  // 切换爪子系统的状态：抓取地面上的苗，存储在车上
-				else
-				{
-					if(check_grap_arrive(grap_info) == true)
-						grap_seed(grap_info);   // 切换爪子系统的状态：抓取地上的苗，但不存储
-				}
+			/* 奇数次触发，抓取地上的苗 */
+			else{
+				osEventFlagsWait(motion_arrive_eventHandle, EVENT_GRAP_ARRIVE, osFlagsWaitAny, osWaitForever);
+				grap_seed();
+				osEventFlagsWait(motion_arrive_eventHandle, EVENT_GRAP_ARRIVE, osFlagsWaitAny, osWaitForever);
+			}
 
-				if(reset_ops9_z == 1 && get_grap_parity(seed_info) == GRAP_COUNT_EVEN)
-				{
-					Odom_ResetZ();
-					reset_ops9_z = 0;
-				}
-				if(reset_ops9_y == 1 && get_grap_parity(seed_info) == GRAP_COUNT_ODD)
-				{
-					Odom_ResetX();
-					reset_ops9_y = 0;
-				}
-
-				stop_chassis(robot_info);
-				seed_info->run_tick++;
+			/* 动作均已完成，被唤醒后处理后续逻辑 */
+			seed_info->grap_count++;
+			if(get_grap_parity(seed_info) == GRAP_COUNT_EVEN) {
+				dji_motor_setref(motor_lift_left,  0);
+				dji_motor_setref(motor_lift_right, 0);
+				seed_info->seed_state = SEED_STATE_MOVE_2_PUT;
+			} else {
+				seed_info->seed_state = SEED_STATE_MOVE_2_GET;
 			}
 			break;
 		}
 		
 		case SEED_STATE_MOVE_2_PUT:
     	{
-		  	if((seed_info->run_tick >= 50 && chassis_arrive_check(robot_info) == true && get_put_move_pos(seed_info) == PUT_MOVE_2_FRONT) ||
-		  	   (seed_info->run_tick >= 50 && chassis_arrive_check(robot_info) == true && get_put_move_pos(seed_info) == PUT_MOVE_2_BACK)) 
-			{
-				seed_info->putm_count++;
-				seed_info->run_tick = 0;
-				seed_info->seed_state = SEED_STATE_PUT;
-			}
-			else
-			{
-				ChassisCmd_t chassis_cmd;
-				chassis_cmd.pos_target.pos_x = sign_t * put_pos_x[seed_info->pos_index - 2];
+			ChassisCmd_t chassis_cmd;
+			chassis_cmd.pos_target.pos_x = sign_t * put_pos_x[seed_info->pos_index - 2];
+			chassis_cmd.pos_target.pos_y = put_pos_y[0];
+			chassis_cmd.pos_target.pos_z = 0;
+
+			chassis_cmd.mode_x = AXIS_MODE_POS;
+			chassis_cmd.mode_y = AXIS_MODE_POS;
+			chassis_cmd.mode_z = AXIS_MODE_POS;
+
+			if(get_put_move_pos(seed_info) == PUT_MOVE_2_FRONT)
 				chassis_cmd.pos_target.pos_y = put_pos_y[0];
-				chassis_cmd.pos_target.pos_z = 0;
+			else
+				chassis_cmd.pos_target.pos_y = put_pos_y[1];
+			
+			osMessageQueuePut(chassis_cmd_queueHandle, &chassis_cmd, 0, 0);
 
-				chassis_cmd.mode_x = AXIS_MODE_POS;
-				chassis_cmd.mode_y = AXIS_MODE_POS;
-				chassis_cmd.mode_z = AXIS_MODE_POS;
+			preput_seed();
 
-				if(get_put_move_pos(seed_info) == PUT_MOVE_2_FRONT){
-					chassis_cmd.pos_target.pos_y = put_pos_y[0];
-				}
-				else{
-					chassis_cmd.pos_target.pos_y = put_pos_y[1];
-				}
-				osMessageQueuePut(chassis_cmd_queueHandle, &chassis_cmd, 0, 0);
+			osEventFlagsWait(motion_arrive_eventHandle, EVENT_CHASSIS_ARRIVE, osFlagsWaitAll, osWaitForever);
 
-				preput_seed(grap_info);
-				seed_info->run_tick++;
-			}
+			seed_info->putm_count++;
+			seed_info->seed_state = SEED_STATE_PUT;
 			break;
 		}
 
 		case SEED_STATE_PUT:
     	{
-			if( ( get_put_move_pos(seed_info) == PUT_MOVE_2_BACK && check_grap_arrive(grap_info) == true) ||  
-			    ( get_put_move_pos(seed_info) == PUT_MOVE_2_FRONT && seed_info->run_tick >= (GRAP_TICK_OPEN + 10) ) )  
-			{
-				seed_info->put_count++;
-				grap_info->grap_arrive = 0;
-				dji_motor_setref(motor_lift_left,   0);
-				dji_motor_setref(motor_lift_right,  0);
-
-				if(get_put_parity(seed_info) == PUT_ODD)
-				{
-					grap_info->put_lift_tick = 0;
-					seed_info->seed_state = SEED_STATE_MOVE_2_PUT;
-				}
-				else
-          			seed_info->seed_state = SEED_STATE_CORRECT;
-
-				seed_info->run_tick = 0;
+			put_seed();
+        	stop_chassis();
+			
+			if(get_put_move_pos(seed_info) == PUT_MOVE_2_FRONT){
+				osDelay(GRAP_TICK_OPEN + 10);
+			}else{
+				osEventFlagsWait(motion_arrive_eventHandle, EVENT_GRAP_ARRIVE, osFlagsWaitAll, osWaitForever);
 			}
-			else
+
+			seed_info->put_count++;
+
+			dji_motor_setref(motor_lift_left,   0);
+			dji_motor_setref(motor_lift_right,  0);
+
+			if(get_put_parity(seed_info) == PUT_EVEN)
 			{
-				put_seed(grap_info);
-        		stop_chassis(robot_info);
-				seed_info->run_tick++;
+				seed_info->seed_state = SEED_STATE_CORRECT;
+			}
+			else{
+				grap_info->put_lift_tick = 0;
+				seed_info->seed_state = SEED_STATE_MOVE_2_PUT;
 			}
 			break;
 		}
 		
 		case SEED_STATE_CORRECT:
     	{
-		  	if(seed_info->run_tick <= 120)
+			ChassisCmd_t chassis_cmd;
+			chassis_cmd.speed_target.target_vx = -sign_t * 0.8;
+			chassis_cmd.speed_target.target_vy =  0.4;
+			chassis_cmd.speed_target.target_vz = 0;
+
+			chassis_cmd.mode_x = AXIS_MODE_VEL;
+			chassis_cmd.mode_y = AXIS_MODE_VEL;
+			chassis_cmd.mode_z = AXIS_MODE_VEL;
+
+			osMessageQueuePut(chassis_cmd_queueHandle, &chassis_cmd, 0, 0);
+			osDelay(120);
+
+			if(seed_info->pos_index >= 6)
 			{
-				seed_info->run_tick++;
-
-				ChassisCmd_t chassis_cmd;
-				chassis_cmd.speed_target.target_vx = -sign_t * 0.8;
-				chassis_cmd.speed_target.target_vy =  0.4;
-				chassis_cmd.speed_target.target_vz = 0;
-
-				chassis_cmd.mode_x = AXIS_MODE_VEL;
-				chassis_cmd.mode_y = AXIS_MODE_VEL;
-				chassis_cmd.mode_z = AXIS_MODE_VEL;
-
-				osMessageQueuePut(chassis_cmd_queueHandle, &chassis_cmd, 0, 0);
+				/* 修改为任务调度的形式, 切换到过渡任务 */
+				// start_transition_task(robot_info, trans_info);
+				break;
 			}
 			else
-			{
-			  	if(seed_info->pos_index >= 6)
-				{
-					seed_info->run_tick = 0;
-					/* 修改为任务调度的形式, 切换到过渡任务 */
-					// start_transition_task(robot_info, trans_info);
-					break;
-				}
-				else
-					seed_info->seed_state = SEED_STATE_MOVE_2_GET;
-			}
+				seed_info->seed_state = SEED_STATE_MOVE_2_GET;
+
 			break;
 		}
 		default:

@@ -10,6 +10,8 @@
 #include "task.h"
 #include "cmsis_os.h"
 
+#define EVENT_CHASSIS_ARRIVE    (1 << 0)  // 地盘到达目标位置
+
 #define TIMEFORACC 0.03f
 #define M3508_MOTOR_SPEED_PID_KP 10000.0f
 #define M3508_MOTOR_SPEED_PID_KI 10.0f
@@ -121,8 +123,6 @@ typedef struct
     AxisMode_e mode_y;
     AxisMode_e mode_z; 
 
-	uint32_t sac;
-
 	uint8_t limit_vy_flag;
   	uint8_t red_single_flag;
 	uint8_t blue_single_flag;
@@ -152,5 +152,6 @@ typedef struct
 extern int8_t sign_t;
 extern osMessageQueueId_t chassis_cmd_queueHandle;
 void chassis_task_entry(void *argument);
+void stop_chassis(void);
 #endif
 
