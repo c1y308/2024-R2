@@ -12,54 +12,36 @@
 
 typedef enum {
     CMD_NONE = 0,
-    CMD_SEED_STORE,     // 抓取并存储
-    CMD_SEED_GRAP,      // 仅抓取
-    CMD_SEED_PREPUT,    // 预放苗
-    CMD_SEED_PUT        // 放苗
+	CMD_SEED_INIT,
+    CMD_SEED_GRAP_2_STORE,       // 抓取后进行存储
+	CMD_SEED_GRAP_2_DIRECT_PUT,  // 抓取后进行种植
+	CMD_SEED_PUT_RESTORED_SEED,  // 种植存储的苗
 } GrapCommand_e;
 
 
 typedef enum{
-	GARP_STATE_IDLE = 0,
-	GARP_STATE_INIT = 1,
+	GRAP_STATE_IDLE = 0,
+	GRAP_STATE_INIT = 1,
 
-	GRAP_STATE_START_STORAGE,     // 把场地上的苗抓取并存储
-	GRAP_STATE_GRAP,
-	GRAP_STATE_PRELIFT,
-	GRAP_STATE_ROTATE,
-	GRAP_STATE_ROTATE_2,
-	GRAP_STATE_OPEN,
-	GRAP_STATE_BACK2WAIT,
+	GRAP_STATE_GRAP_2_STORE,
+	GRAP_STATE_GRAP_2_DIRECT_PUT,
 
-	GARP_STATE_LIFT,  // 抓取场地上的苗之后抬升
+	GRAP_STATE_RESTORE_ROTATE_FRONT,
+	GRAP_STATE_RESTORE_ROTATE_BACK,
 
-	GRAP_STATE_PRE_PUT,
+	GRAP_STATE_PUT_ROTATE_FRONT,
+	GRAP_STATE_PUT_ROTATE_BACK,
 
-	GRAP_STATE_PUT_ROTATE,
-	GRAP_STATE_PUT_ROTATEBACK,
-
-    GRAP_STATE_WAIT_AND_PUT,
+    GRAP_STATE_PUT_CORRECT,
 }GrapState_e;
 
 
 typedef struct
 {
-    GrapState_e grap_last_state;
 	GrapState_e grap_state;
-	uint16_t grap_tick;
 
-	uint8_t start_storage;
-	uint8_t start_storage_out;
-	
 	uint8_t grap_arrive;
-	uint8_t ready_2_move;  // 考虑以信号量进行替代
     
-	uint8_t test_semophare;
-	
-	uint16_t get_lift_tick;
-	
-	uint16_t put_lift_tick; 
-	
 	float ErrorAngle[2];
 	float ErrorLift[2];
 }grap_t;
@@ -71,10 +53,15 @@ extern DjiMotorHandle_t *motor_yaw_left, *motor_yaw_right, *motor_lift_left, *mo
 extern grap_t grap_ifo;
 extern osMessageQueueId_t grap_cmd_queueHandle;
 
-void grap_seed_store();
-void grap_seed();
-void preput_seed();
-void put_seed();
+
+void grap_motor_init(void);
+void grap_task(grap_t *grap_ifo);
+
+void grap_init(void);
+void grap_seed_2_store(void);
+void grap_seed_2_put(void);
+void put_stored_seed(void);
+
 // grap_init
 
 

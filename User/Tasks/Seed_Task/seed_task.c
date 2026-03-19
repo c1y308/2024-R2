@@ -50,13 +50,16 @@ void seedtask_init(SeedInfo_t *seed_info)
 
 
 /* 调用地盘module 和 爪子module 的相关API 来完成种植任务，主要进行逻辑实现 */
-void plant_task(SeedInfo_t *seed_info)
+void plant_task(void *argument)
 {
+	SeedInfo_t *seed_info = (SeedInfo_t *)argument;
+
   	switch(seed_info->seed_state)
 	{
 		case SEED_STATE_INIT:
     	{
-			// 需要让爪子完成初始化状态
+			/* 需要给夹爪模块发送初始化消息 */
+			grap_init();
 
 			/* 通过消息队列给地盘发送速度控制信息 */
 			ChassisCmd_t chassis_cmd;
@@ -173,7 +176,6 @@ void plant_task(SeedInfo_t *seed_info)
 			
 			osMessageQueuePut(chassis_cmd_queueHandle, &chassis_cmd, 0, 0);
 
-			preput_seed();
 
 			osEventFlagsWait(motion_arrive_eventHandle, EVENT_CHASSIS_ARRIVE, osFlagsWaitAll, osWaitForever);
 

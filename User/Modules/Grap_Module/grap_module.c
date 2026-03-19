@@ -1,5 +1,17 @@
 #include "grap_module.h"
 #include "chassis_module.h"
+static void set_grap_motor_zero_speed(void);
+static void grap_only(void);
+static void out_only(void);
+static void grap_pos_init(void);
+static void lift_seed_from_land(void);
+static void restore_rotate_front(void);
+static void restore_rotate_back(void);
+static void lift_pre_put(void);
+static void put_rotate_front(void);
+static void put_rotate_back(void);
+
+
 grap_t grap_ifo; 
 
 
@@ -43,15 +55,39 @@ void grap_motor_init()
     motor_yaw_right = djimotor_init(&chassis_motor_config);
 
 	chassis_motor_config.motor_id = 4;
-    motor_yaw_right = djimotor_init(&chassis_motor_config);
+    motor_lift_right = djimotor_init(&chassis_motor_config);
 
 	chassis_motor_config.motor_id = 5;
-    motor_yaw_right = djimotor_init(&chassis_motor_config);
+    motor_grap_right = djimotor_init(&chassis_motor_config);
 }
 
 
-bool check_grap_arrive(grap_t *grap_ifo){
-	return grap_ifo->grap_arrive == 1;
+void grap_init(){
+	GrapCommand_e cmd = CMD_SEED_INIT;
+    osMessageQueuePut(grap_cmd_queueHandle, &cmd, 0, 0);
+}
+
+/* 每次抓取命令对应2种状态：抓取场地苗存储在车上、抓取场地上的苗进行种植 */
+/* 抓取后存储在车上 */
+void grap_seed_2_store(){
+	GrapCommand_e cmd = CMD_SEED_GRAP_2_STORE;
+    osMessageQueuePut(grap_cmd_queueHandle, &cmd, 0, 0); 
+
+	/* 抓取完毕后需要旋转到存储位置 */
+}
+/* 抓取后直接去种植 */
+void grap_seed_2_put(){
+	GrapCommand_e cmd = CMD_SEED_GRAP_2_DIRECT_PUT;
+    osMessageQueuePut(grap_cmd_queueHandle, &cmd, 0, 0); 
+
+	/* 抓取完毕后需要降低高度准备种植 */
+}
+
+
+/* 种植存储的苗首先需要进行旋转 */
+void put_stored_seed(){
+	GrapCommand_e cmd = CMD_SEED_PUT_RESTORED_SEED;
+    osMessageQueuePut(grap_cmd_queueHandle, &cmd, 0, 0);
 }
 
 
@@ -67,24 +103,156 @@ static void init_grap_motor(){
 }
 
 
-void grap_init(grap_t *grap_ifo)
-{   
-    grap_ifo->grap_state = GARP_STATE_INIT;
-    grap_ifo->grap_last_state = GARP_STATE_IDLE;
-	grap_ifo->grap_arrive = 0;
+// void grap_init(grap_t *grap_ifo)
+// {   
+//     grap_ifo->grap_state = GRAP_STATE_INIT;
+//     grap_ifo->grap_last_state = GRAP_STATE_IDLE;
+// 	grap_ifo->grap_arrive = 0;
 
 
-	grap_ifo->grap_tick++;
+// 	grap_ifo->grap_tick++;
 
-	init_grap_motor();
+// 	init_grap_motor();
 
-	if(grap_ifo->grap_tick >= 300){
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_RESET);
-		set_grap_motor_zero_speed();
+// 	if(grap_ifo->grap_tick >= 300){
+// 		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_RESET);
+// 		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_RESET);
+// 		set_grap_motor_zero_speed();
+// 	}
+
+// 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_SET);
+// }
+
+
+void grap_task(grap_t *grap_ifo){
+
+	GrapCommand_e cmd;
+	/* 必须作为全局变量(?)，open的时候还要用 */
+	switch (grap_ifo->grap_state)
+	{
+		case GRAP_STATE_IDLE:{
+
+			set_grap_motor_zero_speed();
+
+			if (osMessageQueueGet(grap_cmd_queueHandle, &cmd, NULL, 0) == osOK) {
+				// 根据指令进入不同状态
+				switch(cmd) {
+				/* 初始化指令 */
+				case CMD_SEED_INIT:{
+					grap_ifo->grap_state = GRAP_STATE_INIT;
+					break;
+				}
+				/* 抓取苗并存储 */
+				case CMD_SEED_GRAP_2_STORE:{
+					grap_ifo->grap_state = GRAP_STATE_GRAP_2_STORE;
+					break;
+				}
+				/* 抓取苗直接种植 */
+				case CMD_SEED_GRAP_2_DIRECT_PUT:{
+					grap_ifo->grap_state = GRAP_STATE_GRAP_2_DIRECT_PUT;
+					break;
+				}
+				/* 种植存储在车上的苗 */
+				case CMD_SEED_PUT_RESTORED_SEED:{
+					grap_ifo->grap_state = GRAP_STATE_PUT_ROTATE_FRONT;
+					break;
+				}
+				default:
+					break;
+				}
+			}
+			break;
+		}
+
+		case GRAP_STATE_INIT:{
+			grap_pos_init();
+			grap_ifo->grap_state = GRAP_STATE_IDLE;
+			break;
+		}
+		/* 抓取后把苗存储在车上 */
+		case GRAP_STATE_GRAP_2_STORE:{
+
+			/* 夹爪闭合抓取苗 */
+			grap_only();
+
+			/* 抬升把苗从场地拔出来 */
+			lift_seed_from_land();
+
+			/* 然后旋转存储在车上 */
+			grap_ifo->grap_state = GRAP_STATE_RESTORE_ROTATE_FRONT;
+	
+			break;
+		}
+		case GRAP_STATE_RESTORE_ROTATE_FRONT:{
+
+			/* 夹爪旋转到机器人存储苗的位置 */
+			restore_rotate_front();
+
+			/* 转到位，打开夹爪 */
+			out_only();
+
+			grap_ifo->grap_state = 	GRAP_STATE_RESTORE_ROTATE_BACK;
+			break;
+		}
+		/* 存储完苗，夹爪旋转回去 */
+		case GRAP_STATE_RESTORE_ROTATE_BACK:{
+
+			restore_rotate_back();
+			
+			grap_ifo->grap_arrive = 1;  // 划重点
+
+			/* 完成这一个动作，等待下一个指令 */
+			grap_ifo->grap_state = 	GRAP_STATE_IDLE;
+
+			break;
+		}
+		case GRAP_STATE_GRAP_2_DIRECT_PUT:{
+			/* 抓取场地苗 */
+			grap_only();
+
+			/* 抬升把苗从场地拔出来 */
+			lift_seed_from_land();
+
+			/* 然后降低高度准备种植 */
+			lift_pre_put();
+			grap_ifo->grap_state = GRAP_STATE_PUT_CORRECT;
+
+			break;
+		}
+		case GRAP_STATE_PUT_ROTATE_FRONT:{
+			put_rotate_front();
+
+			/* 进行抓取 */
+			grap_only();
+
+			grap_ifo->grap_state = GRAP_STATE_PUT_ROTATE_BACK;
+
+			break;
+		}
+
+		case GRAP_STATE_PUT_ROTATE_BACK:{
+
+			/* 旋转到放苗的位置 */
+			put_rotate_back();
+
+			grap_ifo->grap_state = GRAP_STATE_PUT_CORRECT;
+			
+			break;
+		}
+
+        case GRAP_STATE_PUT_CORRECT:{
+
+			// 需要把地盘模式设置为纯手动控制
+            // 需要seed_task一个信号量来进行 ack 确认可以打开爪子放苗
+			out_only();
+
+			/* 打开夹爪，完成动作，等待下一个命令 */
+			grap_ifo->grap_state = GRAP_STATE_IDLE;
+			break;
+		}
+		default:
+			break;
 	}
-
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_SET);
 }
 
 
@@ -114,369 +282,8 @@ static void set_grap_motor_zero_speed()
 }
 
 
-void grap_seed_store(){
-	// grap_ifo->grap_state = GRAP_STATE_START_STORAGE;
-
-	GrapCommand_e cmd = CMD_SEED_STORE;
-    xQueueSend(grap_cmd_queueHandle, &cmd, 0); 
-}
-
-
-void grap_seed(){
-	// grap_ifo->grap_state = GRAP_STATE_GRAP;
-
-	GrapCommand_e cmd = CMD_SEED_GRAP;
-    xQueueSend(grap_cmd_queueHandle, &cmd, 0);
-}
-
-
-void preput_seed(){
-	// grap_ifo->grap_state = GRAP_STATE_PRE_PUT;
-
-	GrapCommand_e cmd = CMD_SEED_PREPUT;
-    xQueueSend(grap_cmd_queueHandle, &cmd, 0);
-}
-
-
-void put_seed(){
-	// grap_ifo->grap_state = GRAP_STATE_WAIT_AND_PUT;
-
-	GrapCommand_e cmd = CMD_SEED_PUT;
-    xQueueSend(grap_cmd_queueHandle, &cmd, 0);
-}
-
-
-void grap_task(grap_t *grap_ifo){
-
-	GrapCommand_e cmd;
-
-	switch (grap_ifo->grap_state)
-	{
-		case GARP_STATE_IDLE:{
-			set_grap_motor_zero_speed();
-
-			if (xQueueReceive(grap_cmd_queueHandle, &cmd, 0) == pdPASS) {
-				// 根据指令进入不同的起始状态
-				switch(cmd) {
-				case CMD_SEED_STORE:{
-					grap_ifo->grap_state = GRAP_STATE_START_STORAGE;
-					break;
-				}
-				case CMD_SEED_GRAP:{
-					grap_ifo->grap_state = GRAP_STATE_GRAP;
-					break;
-				}
-				case CMD_SEED_PREPUT:{
-					grap_ifo->grap_state = GRAP_STATE_PRE_PUT;
-					break;
-				}
-				case CMD_SEED_PUT:{
-					grap_ifo->grap_state = GRAP_STATE_WAIT_AND_PUT;
-					break;
-				}
-				default:
-					break;
-				}
-			}
-			break;
-		}
-
-		case GARP_STATE_INIT:{
-			grap_ifo->grap_tick++;
-			if(grap_ifo->grap_tick < 150){
-				dji_motor_setref(motor_yaw_left, - GRAP_ANGLE_SPEED);
-				dji_motor_setref(motor_yaw_right,  GRAP_ANGLE_SPEED);
-
-				dji_motor_setref(motor_lift_left,  - SAFE_GRAP_SPEED);
-				dji_motor_setref(motor_lift_right,   SAFE_GRAP_SPEED);
-
-				dji_motor_setref(motor_grap_left,    SAFE_GRAP_SPEED);
-				dji_motor_setref(motor_grap_right, - SAFE_GRAP_SPEED);
-			}
-            else if(grap_ifo->grap_tick >= 150 && grap_ifo->grap_tick < 300){
-				dji_motor_setref(motor_yaw_left, - LOW_ANGLE_SPEED);
-				dji_motor_setref(motor_yaw_right,  LOW_ANGLE_SPEED);
-
-				dji_motor_setref(motor_lift_left,   - GRAP_LIFT_SPEED);
-				dji_motor_setref(motor_lift_right,    GRAP_LIFT_SPEED);
-
-				dji_motor_setref(motor_grap_left,    GRAP_SPEED_OPEN);
-				dji_motor_setref(motor_grap_right, - GRAP_SPEED_OPEN);
-			}
-			else
-				set_grap_motor_zero_speed();
-
-			break;
-		}
-		/*************************************一共七个状态****************************************************/
-		case GRAP_STATE_START_STORAGE:{  // 进入把场地上的苗抓取并存储状态
-            grap_ifo->grap_last_state = GRAP_STATE_START_STORAGE;
-			grap_ifo->grap_state = GRAP_STATE_GRAP;
-			break;
-		}
-
-		case GRAP_STATE_GRAP:{  // 抓取苗
-			if(grap_ifo->grap_tick >= GRAP_TICK_CLOSE)
-			{	
-				switch(grap_ifo->grap_last_state){
-					/* 当上次状态是空闲状态时，抓取苗后需要先旋转180度后再把苗存储在车上 */
-					case GARP_STATE_IDLE:
-						grap_ifo->grap_state = GRAP_STATE_PUT_ROTATEBACK;
-						break;
-					/* 当上次状态是首次抓苗并存储状态时，抓取苗后需要先预抬升 */
-					case GRAP_STATE_START_STORAGE:
-						grap_ifo->grap_state = GRAP_STATE_PRELIFT;
-						break;
-					case GRAP_STATE_BACK2WAIT:
-						grap_ifo->grap_state = GARP_STATE_LIFT;
-					case GRAP_STATE_PUT_ROTATE:
-						grap_ifo->grap_state = GRAP_STATE_PUT_ROTATEBACK;
-					default:
-						break;
-				}		
-
-                grap_ifo->grap_last_state = GRAP_STATE_GRAP;
-                grap_ifo->grap_tick = 0;
-			}else{
-				grap_ifo->grap_tick++;
-				grap_only();
-			}
-			break;
-		}
-
-		case GRAP_STATE_PRELIFT:{
-			if(grap_ifo->grap_tick >= GRAP_LIFT_TICK_PRE)//预抬升到指定高度
-			{
-				grap_ifo->grap_tick = 0;
-                grap_ifo->grap_last_state = GRAP_STATE_PRELIFT;
-				grap_ifo->grap_state = GRAP_STATE_ROTATE;
-			}
-			else
-			{
-				dji_motor_setref(motor_lift_left,    SPEED_LIFT_PLUS);
-				dji_motor_setref(motor_lift_right, - SPEED_LIFT_PLUS);
-				grap_ifo->grap_tick++;
-			}
-			break;
-		}
-		case GRAP_STATE_ROTATE:{
-			if(grap_ifo->grap_tick >= CAUTION_TICK)//只有转了一定角度后才允许地盘进行移动防止地盘移动后转动打到场地苗
-			{
-				grap_ifo->ready_2_move = 1;//允许车移动到下一个取苗点位（考虑以信号量进行替代，此处释放信号量）
-                grap_ifo->grap_last_state = GRAP_STATE_ROTATE;
-				grap_ifo->grap_state = GRAP_STATE_ROTATE_2;
-				grap_ifo->grap_tick = 0;
-			}
-			else
-			{
-				dji_motor_setref(motor_yaw_left,    SPEED_ANGLE_PLUS);
-				dji_motor_setref(motor_lift_left,   SPEED_LIFT_PLUS);
-				dji_motor_setref(motor_grap_left,   GRAP_SPEED);
-
-				dji_motor_setref(motor_yaw_right,  - SPEED_ANGLE_PLUS);
-				dji_motor_setref(motor_lift_right, - SPEED_LIFT_PLUS);
-				dji_motor_setref(motor_grap_right, - GRAP_SPEED);
-
-				grap_ifo->grap_tick++;
-			}
-			break;
-		}
-		case GRAP_STATE_ROTATE_2:{
-			if(grap_ifo->grap_tick >= CONTINUE_STORAGE_TICK)//接着上一步继续转到位(next_state == 0 && grap_ifo.grap_arrive == 0)
-			{
-                grap_ifo->grap_last_state = GRAP_STATE_ROTATE_2;
-				grap_ifo->grap_state = GRAP_STATE_OPEN;
-				grap_ifo->grap_tick = 0;
-			}
-			else
-			{
-				dji_motor_setref(motor_yaw_left,    SPEED_ANGLE_PLUS);
-				dji_motor_setref(motor_lift_left,   SPEED_LIFT_PLUS);
-				dji_motor_setref(motor_grap_left,   GRAP_SPEED);
-
-				dji_motor_setref(motor_yaw_right,  - SPEED_ANGLE_PLUS);
-				dji_motor_setref(motor_lift_right, - SPEED_LIFT_PLUS);
-				dji_motor_setref(motor_grap_right, - GRAP_SPEED);
-				
-				if(grap_ifo->grap_tick >= GRAP_LIFT_TICK_PRE_COM)  // 降速
-				{
-					dji_motor_setref(motor_lift_left,   -1);
-					dji_motor_setref(motor_lift_right,   1);
-				}
-				grap_ifo->grap_tick++;
-			}
-			break;
-		}
-		case GRAP_STATE_OPEN:{
-			if(grap_ifo->grap_tick >= GRAP_TICK_OPEN)//打开爪子
-			{
-				dji_motor_setref(motor_grap_left,   0);
-				dji_motor_setref(motor_grap_right, 0);
-                if(grap_ifo->grap_last_state == GRAP_STATE_ROTATE_2)
-				    grap_ifo->grap_state = GRAP_STATE_BACK2WAIT;
-
-                grap_ifo->grap_last_state = GRAP_STATE_OPEN;
-				grap_ifo->grap_tick = 0;
-			}
-			else
-			{
-				dji_motor_setref(motor_yaw_left,    SAFE_GRAP_SPEED);
-				dji_motor_setref(motor_lift_left,   0);
-				dji_motor_setref(motor_grap_left,   GRAP_SPEED_OPEN);
-
-				dji_motor_setref(motor_yaw_right,  - SAFE_GRAP_SPEED);
-				dji_motor_setref(motor_lift_right, - 0);
-				dji_motor_setref(motor_grap_right, - GRAP_SPEED_OPEN);
-
-				grap_ifo->grap_tick++;
-			}
-			break;
-		}
-
-		case GRAP_STATE_BACK2WAIT:{
-			if(grap_ifo->grap_tick >= GRAP_LIFT_TICK_AFT + GRAP_LIFT_TICK_PRE - GRAP_FAST_TICK + 20)
-			{
-				dji_motor_setref(motor_yaw_left,    -0);
-				dji_motor_setref(motor_lift_left,   -LOW_LIFT_SPEED);
-				
-				dji_motor_setref(motor_yaw_right,   0);
-				dji_motor_setref(motor_lift_right,  LOW_LIFT_SPEED);
-				
-				grap_ifo->grap_arrive = 1;  // 划重点
-				grap_ifo->grap_tick = 0;
-                grap_ifo->grap_last_state = GRAP_STATE_BACK2WAIT;
-				grap_ifo->grap_state = 		GARP_STATE_IDLE;
-			}
-			else
-			{
-				dji_motor_setref(motor_yaw_left,    - GRAP_ANGLE_SPEED - SPEED_ANGLE_PLUS);
-				dji_motor_setref(motor_lift_left,   - GRAP_LIFT_SPEED  - SPEED_LIFT_PLUS);
-				
-				dji_motor_setref(motor_yaw_right,   GRAP_ANGLE_SPEED  + SPEED_ANGLE_PLUS);
-				dji_motor_setref(motor_lift_right,  GRAP_LIFT_SPEED   + SPEED_LIFT_PLUS);
-
-				grap_ifo->grap_tick++;
-			}
-				break;
-		}
-
-		case GARP_STATE_LIFT:{
-			if(grap_ifo->grap_tick >= GRAP_LIFT_TICK_PRE)
-			{
-				grap_ifo->grap_tick = 0;
-				grap_ifo->grap_arrive = 0;
-                grap_ifo->grap_last_state = GARP_STATE_LIFT;
-				grap_ifo->grap_state = GRAP_STATE_PRE_PUT;
-			}
-			else
-			{
-				dji_motor_setref(motor_lift_left,     SPEED_LIFT_PLUS);
-				dji_motor_setref(motor_lift_right,  - SPEED_LIFT_PLUS);
-				
-				dji_motor_setref(motor_yaw_left,     0.1);
-				dji_motor_setref(motor_yaw_right,  - 0.1);
-				
-				dji_motor_setref(motor_grap_left,    GRAP_SPEED);
-				dji_motor_setref(motor_grap_right, - GRAP_SPEED);
-			}
-			break;
-		}
-		/***********************************************************************************************/
-		case GRAP_STATE_PRE_PUT:{
-			if(seed_ifo.putm_count % 2 == 0)  // 降低高度预放苗
-			{
-				if(seed_ifo.run_tick <= 280)
-				{
-					dji_motor_setref(motor_lift_left,    2.3);
-					dji_motor_setref(motor_lift_right, - 2.3);
-				}
-				else
-				{
-					dji_motor_setref(motor_lift_left,   0);
-					dji_motor_setref(motor_lift_right,  0);
-				}
-                grap_ifo->grap_state = GRAP_STATE_WAIT_AND_PUT;
-                grap_ifo->grap_last_state = GRAP_STATE_PRE_PUT;
-			}
-			else  // 抓取存储在车上的苗并预放高度
-			{
-				grap_ifo->grap_state = GRAP_STATE_PUT_ROTATE;
-                grap_ifo->grap_last_state = GRAP_STATE_PRE_PUT;
-			}
-			break;
-		}
-
-		case GRAP_STATE_PUT_ROTATE:{
-			if(grap_ifo->grap_tick >= GRAP_LIFT_TICK_AFT + GRAP_LIFT_TICK_PRE - GRAP_FAST_TICK + 70) //转动到存储苗的位置
-			{
-                grap_ifo->grap_last_state = GRAP_STATE_PUT_ROTATE;
-				grap_ifo->grap_state = GRAP_STATE_GRAP;
-				grap_ifo->grap_tick = 0;
-			}
-			else
-			{
-				grap_ifo->grap_tick++;
-				if(grap_ifo->grap_tick >= 20)
-				{
-					dji_motor_setref(motor_yaw_left,    SPEED_ANGLE_PLUS + 0.4);//减速+ 0.1
-					dji_motor_setref(motor_lift_left,   SPEED_LIFT_PLUS  - 0.4);//加速- 0.1
-
-					dji_motor_setref(motor_yaw_right,  - SPEED_ANGLE_PLUS - 0.4);
-					dji_motor_setref(motor_lift_right, - SPEED_LIFT_PLUS  + 0.4);		
-				}
-			}
-			break;
-		}
-
-		case GRAP_STATE_PUT_ROTATEBACK:{
-			if(grap_ifo->grap_tick >= GRAP_LIFT_TICK_AFT + 50)
-			{
-                // 之前在这确认可以进行放苗
-                grap_ifo->grap_last_state = GRAP_STATE_PUT_ROTATEBACK;
-				grap_ifo->grap_state = GRAP_STATE_WAIT_AND_PUT;
-				grap_ifo->grap_tick = 0;
-			}
-			else
-			{
-				grap_ifo->grap_tick++;
-				if(grap_ifo->grap_tick >= START_DOWN_COM_TICK)//大于这个TICK才降低高度
-				{
-					dji_motor_setref(motor_yaw_left,    - GRAP_ANGLE_SPEED);//减速+ 0.1
-					dji_motor_setref(motor_lift_left,   - SPEED_LIFT_PLUS  + 0.8);//加速- 0.1
-					dji_motor_setref(motor_grap_left,     GRAP_SPEED);
-
-					dji_motor_setref(motor_yaw_right,     GRAP_ANGLE_SPEED);
-					dji_motor_setref(motor_lift_right,    SPEED_LIFT_PLUS - 0.8);		
-					dji_motor_setref(motor_grap_right,  - GRAP_SPEED);	
-				}
-				else{
-					dji_motor_setref(motor_yaw_left,    - GRAP_ANGLE_SPEED);//减速+ 0.1
-					dji_motor_setref(motor_lift_left,     0);
-					dji_motor_setref(motor_grap_left,     GRAP_SPEED);
-
-					dji_motor_setref(motor_yaw_right,     GRAP_ANGLE_SPEED);
-					dji_motor_setref(motor_lift_right,    0);		
-					dji_motor_setref(motor_grap_right,  - GRAP_SPEED);	
-				}
-			}
-			break;
-		}
-
-        case GRAP_STATE_WAIT_AND_PUT:{
-            // 需要seed_task一个信号量来进行 ack 确认可以打开爪子放苗
-			grap_ifo->grap_last_state = GRAP_STATE_WAIT_AND_PUT;
-			grap_ifo->grap_state = GARP_STATE_IDLE;
-            out_only();
-			break;
-		}
-		default:
-			break;
-	}
-}
-
-
 //左侧爪子负数为抬升，负数为转向存储方向
-void grap_only()//闭合夹爪
+static void grap_only()//闭合夹爪
 {
 	dji_motor_setref(motor_yaw_left,  0);
 	dji_motor_setref(motor_lift_left, 0);
@@ -485,10 +292,12 @@ void grap_only()//闭合夹爪
 	dji_motor_setref(motor_yaw_right,  0);
 	dji_motor_setref(motor_lift_right, 0);
 	dji_motor_setref(motor_grap_right, - GRAP_SPEED);
+
+	osDelay(GRAP_TICK_CLOSE);
 }
 
 
-void out_only()
+static void out_only()
 {
 	dji_motor_setref(motor_yaw_left,  0);
 	dji_motor_setref(motor_lift_left, 0);
@@ -497,13 +306,139 @@ void out_only()
 	dji_motor_setref(motor_yaw_right,  0);
 	dji_motor_setref(motor_lift_right, 0);
 	dji_motor_setref(motor_grap_right, - GRAP_SPEED_OPEN);
+
+	osDelay(GRAP_TICK_OPEN);
+}
+
+static void grap_pos_init(){
+	dji_motor_setref(motor_yaw_left, - GRAP_ANGLE_SPEED);
+	dji_motor_setref(motor_yaw_right,  GRAP_ANGLE_SPEED);
+
+	dji_motor_setref(motor_lift_left,  - SAFE_GRAP_SPEED);
+	dji_motor_setref(motor_lift_right,   SAFE_GRAP_SPEED);
+
+	dji_motor_setref(motor_grap_left,    SAFE_GRAP_SPEED);
+	dji_motor_setref(motor_grap_right, - SAFE_GRAP_SPEED);
+
+	osDelay(150);
+
+	dji_motor_setref(motor_yaw_left, - LOW_ANGLE_SPEED);
+	dji_motor_setref(motor_yaw_right,  LOW_ANGLE_SPEED);
+
+	dji_motor_setref(motor_lift_left,   - GRAP_LIFT_SPEED);
+	dji_motor_setref(motor_lift_right,    GRAP_LIFT_SPEED);
+
+	dji_motor_setref(motor_grap_left,    GRAP_SPEED_OPEN);
+	dji_motor_setref(motor_grap_right, - GRAP_SPEED_OPEN);
+
+	osDelay(150);
+
+	set_grap_motor_zero_speed();
 }
 
 
+static void lift_seed_from_land(){
+
+	dji_motor_setref(motor_lift_left,    SPEED_LIFT_PLUS);
+	dji_motor_setref(motor_lift_right, - SPEED_LIFT_PLUS);
+
+	osDelay(GRAP_LIFT_TICK_PRE);
+}
+
+static void restore_rotate_front(){
+	dji_motor_setref(motor_yaw_left,    SPEED_ANGLE_PLUS);
+	dji_motor_setref(motor_lift_left,   SPEED_LIFT_PLUS);
+	dji_motor_setref(motor_grap_left,   GRAP_SPEED);
+
+	dji_motor_setref(motor_yaw_right,  - SPEED_ANGLE_PLUS);
+	dji_motor_setref(motor_lift_right, - SPEED_LIFT_PLUS);
+	dji_motor_setref(motor_grap_right, - GRAP_SPEED);
+
+	osDelay(CAUTION_TICK);
+
+	/* ！！！ */
+	// grap_ifo->ready_2_move = 1;//允许车移动到下一个取苗点位（考虑以信号量进行替代，此处给一个信号量）
+
+	dji_motor_setref(motor_yaw_left,    SPEED_ANGLE_PLUS);
+	dji_motor_setref(motor_lift_left,   SPEED_LIFT_PLUS);
+	dji_motor_setref(motor_grap_left,   GRAP_SPEED);
+
+	dji_motor_setref(motor_yaw_right,  - SPEED_ANGLE_PLUS);
+	dji_motor_setref(motor_lift_right, - SPEED_LIFT_PLUS);
+	dji_motor_setref(motor_grap_right, - GRAP_SPEED);
+
+	osDelay(GRAP_LIFT_TICK_PRE_COM);
+
+	dji_motor_setref(motor_lift_left,   -1);
+	dji_motor_setref(motor_lift_right,   1);
+
+	osDelay(CONTINUE_STORAGE_TICK - GRAP_LIFT_TICK_PRE_COM);
+}
 
 
+static void restore_rotate_back(){
+	dji_motor_setref(motor_yaw_left,    - GRAP_ANGLE_SPEED - SPEED_ANGLE_PLUS);
+	dji_motor_setref(motor_lift_left,   - GRAP_LIFT_SPEED  - SPEED_LIFT_PLUS);
+	
+	dji_motor_setref(motor_yaw_right,   GRAP_ANGLE_SPEED  + SPEED_ANGLE_PLUS);
+	dji_motor_setref(motor_lift_right,  GRAP_LIFT_SPEED   + SPEED_LIFT_PLUS);
+
+	osDelay(GRAP_LIFT_TICK_AFT + GRAP_LIFT_TICK_PRE - GRAP_FAST_TICK + 20);
+
+	dji_motor_setref(motor_yaw_left,    -0);
+	dji_motor_setref(motor_lift_left,   -LOW_LIFT_SPEED);
+	
+	dji_motor_setref(motor_yaw_right,   0);
+	dji_motor_setref(motor_lift_right,  LOW_LIFT_SPEED);
+}
 
 
+static void lift_pre_put(){
+	/* 降低夹爪高度，准备种植苗 */
+	dji_motor_setref(motor_lift_left,    2.3);
+	dji_motor_setref(motor_lift_right, - 2.3);
+
+	osDelay(280);
+
+	dji_motor_setref(motor_lift_left,   0);
+	dji_motor_setref(motor_lift_right,  0);
+}
+
+
+static void put_rotate_front(){
+	/* 夹爪旋转到存储苗的位置 */
+	dji_motor_setref(motor_yaw_left,    SPEED_ANGLE_PLUS + 0.4);//减速+ 0.1
+	dji_motor_setref(motor_lift_left,   SPEED_LIFT_PLUS  - 0.4);//加速- 0.1
+
+	dji_motor_setref(motor_yaw_right,  - SPEED_ANGLE_PLUS - 0.4);
+	dji_motor_setref(motor_lift_right, - SPEED_LIFT_PLUS  + 0.4);
+
+	osDelay(GRAP_LIFT_TICK_AFT + GRAP_LIFT_TICK_PRE - GRAP_FAST_TICK + 70);
+}
+
+
+static void put_rotate_back(){
+	dji_motor_setref(motor_yaw_left,    - GRAP_ANGLE_SPEED);//减速+ 0.1
+	dji_motor_setref(motor_lift_left,     0);
+	dji_motor_setref(motor_grap_left,     GRAP_SPEED);
+
+	dji_motor_setref(motor_yaw_right,     GRAP_ANGLE_SPEED);
+	dji_motor_setref(motor_lift_right,    0);		
+	dji_motor_setref(motor_grap_right,  - GRAP_SPEED);	
+
+	osDelay(START_DOWN_COM_TICK);
+
+	/* 允许下降高度 */
+	dji_motor_setref(motor_yaw_left,    - GRAP_ANGLE_SPEED);//减速+ 0.1
+	dji_motor_setref(motor_lift_left,   - SPEED_LIFT_PLUS  + 0.8);//加速- 0.1
+	dji_motor_setref(motor_grap_left,     GRAP_SPEED);
+
+	dji_motor_setref(motor_yaw_right,     GRAP_ANGLE_SPEED);
+	dji_motor_setref(motor_lift_right,    SPEED_LIFT_PLUS - 0.8);		
+	dji_motor_setref(motor_grap_right,  - GRAP_SPEED);	
+
+	osDelay(GRAP_LIFT_TICK_AFT + 50);
+}
 // void Grapping_Callback()
 // {
 //   if((robot_ifo.blue_single_flag==1)||(robot_ifo.red_single_flag==1))//单项赛启用云台闭环计算

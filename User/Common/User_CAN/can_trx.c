@@ -139,7 +139,7 @@ void set_pwm_motor_speed(CAN_HandleTypeDef *hcan, uint16_t speed1, uint16_t spee
 {
     CAN_TxHeaderTypeDef  ZDY_tx_message;    //CAN
     uint8_t              can_send_data[8];  //
-    uint32_t send_mail_box;
+    uint32_t             send_mail_box;
     ZDY_tx_message.StdId = 0xA7;
     ZDY_tx_message.IDE = CAN_ID_STD;
     ZDY_tx_message.RTR = CAN_RTR_DATA;
